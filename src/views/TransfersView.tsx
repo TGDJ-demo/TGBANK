@@ -35,6 +35,7 @@ export const TransfersView: React.FC = () => {
   const [amount, setAmount] = useState('500.00');
   const [memo, setMemo] = useState('Software Services Invoice Payment');
   const [isRecurring, setIsRecurring] = useState<boolean>(false);
+  const [executionSpeed, setExecutionSpeed] = useState<'STANDARD_ACH' | 'INSTANT_WIRE' | 'RTP_PAYMENT'>('STANDARD_ACH');
   const [termsAgreed, setTermsAgreed] = useState<boolean>(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -324,7 +325,7 @@ export const TransfersView: React.FC = () => {
             )}
 
             {/* Transfer Speed Radio Selection */}
-            <div>
+            <div id="section-transfer-speed" data-testid="section-transfer-speed">
               <label id="lbl-transfer-speed" data-testid="lbl-transfer-speed" className="block text-xs font-bold text-slate-700 mb-1.5">
                 Transfer Execution Speed & Processing Rail
               </label>
@@ -332,16 +333,27 @@ export const TransfersView: React.FC = () => {
                 <label
                   id="lbl-radio-speed-standard"
                   data-testid="lbl-radio-speed-standard"
-                  className="p-2.5 bg-slate-50 border border-slate-300 rounded cursor-pointer flex items-start space-x-2 hover:bg-slate-100"
+                  htmlFor="radio-speed-standard"
+                  className={`p-2.5 border rounded cursor-pointer flex items-start space-x-2 transition ${
+                    executionSpeed === 'STANDARD_ACH'
+                      ? 'bg-blue-50/70 border-[#002D72]'
+                      : 'bg-slate-50 border-slate-300 hover:bg-slate-100'
+                  }`}
                 >
                   <input
                     id="radio-speed-standard"
                     data-testid="radio-speed-standard"
+                    data-automation-id="radio-speed-standard"
+                    name="radio-speed-standard"
                     type="radio"
-                    name="transfer-speed"
                     value="STANDARD_ACH"
-                    defaultChecked
-                    className="mt-0.5 text-[#002D72]"
+                    checked={executionSpeed === 'STANDARD_ACH'}
+                    onChange={() => setExecutionSpeed('STANDARD_ACH')}
+                    aria-label="Standard ACH"
+                    aria-checked={executionSpeed === 'STANDARD_ACH' ? 'true' : 'false'}
+                    data-checked={executionSpeed === 'STANDARD_ACH' ? 'true' : 'false'}
+                    data-state={executionSpeed === 'STANDARD_ACH' ? 'checked' : 'unchecked'}
+                    className="mt-0.5 text-[#002D72] cursor-pointer"
                   />
                   <div>
                     <span className="text-xs font-bold text-slate-900 block">Standard ACH</span>
@@ -352,15 +364,27 @@ export const TransfersView: React.FC = () => {
                 <label
                   id="lbl-radio-speed-wire"
                   data-testid="lbl-radio-speed-wire"
-                  className="p-2.5 bg-slate-50 border border-slate-300 rounded cursor-pointer flex items-start space-x-2 hover:bg-slate-100"
+                  htmlFor="radio-speed-wire"
+                  className={`p-2.5 border rounded cursor-pointer flex items-start space-x-2 transition ${
+                    executionSpeed === 'INSTANT_WIRE'
+                      ? 'bg-blue-50/70 border-[#002D72]'
+                      : 'bg-slate-50 border-slate-300 hover:bg-slate-100'
+                  }`}
                 >
                   <input
                     id="radio-speed-wire"
                     data-testid="radio-speed-wire"
+                    data-automation-id="radio-speed-wire"
+                    name="radio-speed-wire"
                     type="radio"
-                    name="transfer-speed"
                     value="INSTANT_WIRE"
-                    className="mt-0.5 text-[#002D72]"
+                    checked={executionSpeed === 'INSTANT_WIRE'}
+                    onChange={() => setExecutionSpeed('INSTANT_WIRE')}
+                    aria-label="Fedwire Same-Day"
+                    aria-checked={executionSpeed === 'INSTANT_WIRE' ? 'true' : 'false'}
+                    data-checked={executionSpeed === 'INSTANT_WIRE' ? 'true' : 'false'}
+                    data-state={executionSpeed === 'INSTANT_WIRE' ? 'checked' : 'unchecked'}
+                    className="mt-0.5 text-[#002D72] cursor-pointer"
                   />
                   <div>
                     <span className="text-xs font-bold text-slate-900 block">Fedwire Same-Day</span>
@@ -371,15 +395,27 @@ export const TransfersView: React.FC = () => {
                 <label
                   id="lbl-radio-speed-rtp"
                   data-testid="lbl-radio-speed-rtp"
-                  className="p-2.5 bg-slate-50 border border-slate-300 rounded cursor-pointer flex items-start space-x-2 hover:bg-slate-100"
+                  htmlFor="radio-speed-rtp"
+                  className={`p-2.5 border rounded cursor-pointer flex items-start space-x-2 transition ${
+                    executionSpeed === 'RTP_PAYMENT'
+                      ? 'bg-blue-50/70 border-[#002D72]'
+                      : 'bg-slate-50 border-slate-300 hover:bg-slate-100'
+                  }`}
                 >
                   <input
                     id="radio-speed-rtp"
                     data-testid="radio-speed-rtp"
+                    data-automation-id="radio-speed-rtp"
+                    name="radio-speed-rtp"
                     type="radio"
-                    name="transfer-speed"
                     value="RTP_PAYMENT"
-                    className="mt-0.5 text-[#002D72]"
+                    checked={executionSpeed === 'RTP_PAYMENT'}
+                    onChange={() => setExecutionSpeed('RTP_PAYMENT')}
+                    aria-label="RTP Instant"
+                    aria-checked={executionSpeed === 'RTP_PAYMENT' ? 'true' : 'false'}
+                    data-checked={executionSpeed === 'RTP_PAYMENT' ? 'true' : 'false'}
+                    data-state={executionSpeed === 'RTP_PAYMENT' ? 'checked' : 'unchecked'}
+                    className="mt-0.5 text-[#002D72] cursor-pointer"
                   />
                   <div>
                     <span className="text-xs font-bold text-slate-900 block">RTP Instant</span>
