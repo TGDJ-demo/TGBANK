@@ -130,9 +130,12 @@ export interface LoanApplication {
 export interface CreditCardDetails {
   id: string;
   cardNumberMasked: string;
+  cardNumberFull?: string;
+  cvv?: string;
+  billingZip?: string;
   cardHolderName: string;
   expiryDate: string;
-  cardType: 'VISA_SIGNATURE' | 'MASTERCARD_WORLD' | 'AMEX_PLATINUM';
+  cardType: 'VISA_SIGNATURE' | 'MASTERCARD_WORLD' | 'AMEX_PLATINUM' | 'AMEX_CENTURION_BLACK';
   creditLimit: number;
   currentBalance: number;
   availableCredit: number;
@@ -197,6 +200,12 @@ export interface ChaosFeatureFlags {
   heavyDomMode: boolean; // Renders 5,000 extra hidden DOM elements
   // Workflow Defects
   brokenWorkflows: boolean; // Disables submit button randomly, broken step 2
+  // Advanced Chaos Engineering Suite
+  packetJitterDrop: boolean; // Simulates network packet loss & retry drops
+  sslCertWarning: boolean; // Simulates untrusted TLS/SSL certificate warning
+  staleCsrfToken: boolean; // Simulates 403 CSRF token rejection on mutations
+  rateLimitBurst: boolean; // Simulates 429 Too Many Requests rate throttling
+  sessionExpiryChaos: boolean; // Simulates unexpected 401 JWT session invalidation
 }
 
 export interface ApiAuditLog {

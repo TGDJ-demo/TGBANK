@@ -35,14 +35,20 @@ async function startServer() {
     res.json({ status: 'HEALTHY', bankName: 'Western Trust Bank', version: '2.5.0-ENTERPRISE', dbStatus: 'CONNECTED' });
   });
 
-  app.post('/api/login', (req, res) => {
-    const { username } = req.body;
+  app.post('/api/auth/login', (req, res) => {
+    const { username, personaKey } = req.body;
     res.json({
-      token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.wtb_jwt_token',
-      user: { username: username || 'john.doe', role: 'CUSTOMER', name: 'John Doe' },
-      mfaRequired: true,
-      mfaSessionId: 'mfa_sess_884920',
+      status: 'AUTHENTICATED',
+      token: `wtb_jwt_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`,
+      user: { username: username || 'admin.wtb', role: 'ADMIN', name: 'Sanjay G' },
+      mfaVerified: true,
+      sessionId: `sess_${Date.now()}`,
+      timestamp: new Date().toISOString(),
     });
+  });
+
+  app.post('/api/auth/logout', (req, res) => {
+    res.json({ status: 'LOGGED_OUT', message: 'Session successfully revoked.', timestamp: new Date().toISOString() });
   });
 
   app.get('/api/accounts', (req, res) => {
@@ -65,34 +71,108 @@ async function startServer() {
   });
 
   app.post('/api/transfers', (req, res) => {
-    const { fromAccountId, amount, toAccountName, transferType } = req.body;
+    const { fromAccountId, amount, toAccountName, toAccountId, transferType, memo, otpCode } = req.body;
+    const refNum = `WTB-TRF-${Math.floor(10000000 + Math.random() * 90000000)}`;
     const newTx = {
       id: `tx_${Date.now()}`,
+      referenceNumber: refNum,
       fromAccountId: fromAccountId || 'acc_chk_101',
-      toAccountName: toAccountName || 'External Account',
+      toAccountId: toAccountId || 'acc_sav_102',
+      toAccountName: toAccountName || 'Internal Account',
       amount: parseFloat(amount) || 100,
-      type: transferType || 'INTERNAL',
+      transferType: transferType || 'INTERNAL',
+      memo: memo || '',
       status: 'COMPLETED',
-      date: new Date().toISOString().split('T')[0],
+      rail: transferType === 'WIRE' ? 'FEDWIRE_RTGS' : transferType === 'INTERNATIONAL' ? 'SWIFT_GPI' : 'INTERNAL_ACH',
+      timestamp: new Date().toISOString(),
     };
     mockTransfers.unshift(newTx);
-    res.json({ status: 'SUCCESS', transfer: newTx, referenceNumber: `WTB-REF-${Math.floor(Math.random() * 900000 + 100000)}` });
+    res.json({
+      status: 'SUCCESS',
+      transfer: newTx,
+      referenceNumber: refNum,
+      correlationId: `corr-wtb-${Math.random().toString(36).substring(2, 9)}`,
+      settlementTime: new Date().toISOString(),
+    });
   });
 
   app.get('/api/transfers', (req, res) => {
     res.json({ transfers: mockTransfers });
   });
 
+  // Credit Cards Endpoints
   app.get('/api/cards', (req, res) => {
     res.json({
       cards: [
-        { id: 'card_1', cardType: 'VISA_SIGNATURE', cardNumberMasked: '•••• •••• •••• 4892', isFrozen: false, creditLimit: 25000, currentBalance: 3420.50 },
+        {
+          id: 'card_centurion_black',
+          cardType: 'AMEX_CENTURION_BLACK',
+          cardNumberMasked: '•••• •••• •••• 8821',
+          cardNumberFull: '3782 822490 91008',
+          cvv: '8492',
+          expiryDate: '10/29',
+          creditLimit: 150000,
+          currentBalance: 4250.00,
+          availableCredit: 145750.00,
+          rewardsPoints: 245000,
+          isFrozen: false,
+          cardHolderName: 'SANJAY G',
+        },
       ],
     });
   });
 
   app.post('/api/cards/freeze', (req, res) => {
-    res.json({ status: 'SUCCESS', isFrozen: true, message: 'Card successfully frozen.' });
+    const { cardId, isFrozen } = req.body;
+    res.json({
+      status: 'SUCCESS',
+      cardId: cardId || 'card_centurion_black',
+      isFrozen: isFrozen ?? true,
+      message: isFrozen ? 'Card security lock engaged.' : 'Card unlocked for domestic and international transactions.',
+      timestamp: new Date().toISOString(),
+    });
+  });
+
+  app.post('/api/cards/payment', (req, res) => {
+    const { cardId, sourceAccountId, amount } = req.body;
+    const refNum = `WTB-CCPAY-${Math.floor(10000000 + Math.random() * 90000000)}`;
+    res.json({
+      status: 'SUCCESS',
+      referenceNumber: refNum,
+      cardId: cardId || 'card_centurion_black',
+      sourceAccountId: sourceAccountId || 'acc_admin_501',
+      amountPaid: parseFloat(amount) || 500,
+      authorizationCode: `AUTH_${Math.floor(100000 + Math.random() * 900000)}`,
+      clearingChannel: 'AMEX_DIRECT_CLEARING',
+      timestamp: new Date().toISOString(),
+    });
+  });
+
+  app.post('/api/cards/limit', (req, res) => {
+    const { cardId, newLimit } = req.body;
+    res.json({
+      status: 'SUCCESS',
+      cardId: cardId || 'card_centurion_black',
+      newCreditLimit: parseFloat(newLimit) || 50000,
+      approvedBy: 'Automated Real-Time Risk Engine',
+      effectiveDate: new Date().toISOString(),
+    });
+  });
+
+  // Bill Payment Endpoint
+  app.post('/api/bills/pay', (req, res) => {
+    const { billId, billerName, accountId, amount } = req.body;
+    const conf = `CONF-ACH-${Math.floor(100000 + Math.random() * 900000)}`;
+    res.json({
+      status: 'SUCCESS',
+      paymentId: `pay_${Date.now()}`,
+      billId: billId || 'bill_001',
+      billerName: billerName || 'Enterprise Biller',
+      amountPaid: parseFloat(amount) || 120.00,
+      confirmationNumber: conf,
+      paymentRail: 'NACHA_DIRECT_DEBIT',
+      timestamp: new Date().toISOString(),
+    });
   });
 
   app.post('/api/payments', (req, res) => {
@@ -106,12 +186,120 @@ async function startServer() {
     });
   });
 
+  // Loans Endpoints
   app.get('/api/loans', (req, res) => {
     res.json({
       loans: [
         { id: 'loan_app_101', loanType: 'HOME_EQUITY', requestedAmount: 250000, status: 'APPROVED', stage: 'APPROVED', APR: '5.85%' },
         { id: 'loan_app_102', loanType: 'COMMERCIAL_CREDIT', requestedAmount: 100000, status: 'SUBMITTED', stage: 'UNDERWRITING_RISK_SCORED', APR: '6.20%' },
       ],
+    });
+  });
+
+  app.post('/api/loans/apply', (req, res) => {
+    const { loanType, requestedAmount, purpose, annualIncome, termMonths } = req.body;
+    const loanId = `loan_app_${Date.now()}`;
+    res.json({
+      status: 'SUBMITTED',
+      loanId,
+      loanType: loanType || 'PERSONAL',
+      requestedAmount: parseFloat(requestedAmount) || 25000,
+      stage: 'APPLICATION_RECEIVED',
+      estimatedAPR: '5.45%',
+      monthlyPayment: 485.50,
+      underwritingTicket: `UW-${Math.floor(10000 + Math.random() * 90000)}`,
+      timestamp: new Date().toISOString(),
+    });
+  });
+
+  app.post('/api/loans/stage', (req, res) => {
+    const { loanId, nextStage, status, notes } = req.body;
+    res.json({
+      status: 'UPDATED',
+      loanId: loanId || 'loan_app_101',
+      stage: nextStage || 'UNDERWRITING_RISK_SCORED',
+      loanStatus: status || 'UNDER_REVIEW',
+      reviewerNotes: notes || 'Automated score computed.',
+      timestamp: new Date().toISOString(),
+    });
+  });
+
+  app.post('/api/loans/disburse', (req, res) => {
+    const { loanId, targetAccountId, amount } = req.body;
+    res.json({
+      status: 'DISBURSED',
+      loanId: loanId || 'loan_app_101',
+      targetAccountId: targetAccountId || 'acc_admin_501',
+      amountDisbursed: parseFloat(amount) || 50000,
+      settlementRef: `DISB-${Math.floor(10000000 + Math.random() * 90000000)}`,
+      timestamp: new Date().toISOString(),
+    });
+  });
+
+  // Statement Download Endpoint
+  app.post('/api/statements/download', (req, res) => {
+    const { accountId, statementPeriod, format } = req.body;
+    res.json({
+      status: 'GENERATED',
+      accountId: accountId || 'acc_admin_501',
+      statementPeriod: statementPeriod || 'July 2026',
+      format: format || 'PDF',
+      fileSize: '1.24 MB',
+      downloadToken: `stmt_dl_${Date.now()}`,
+      verificationHash: `SHA256-${Math.random().toString(36).substring(2, 12)}`,
+      timestamp: new Date().toISOString(),
+    });
+  });
+
+  // Beneficiaries Endpoint
+  app.post('/api/beneficiaries', (req, res) => {
+    const { name, accountNumber, routingNumber, bankName } = req.body;
+    res.json({
+      status: 'CREATED',
+      beneficiaryId: `ben_${Date.now()}`,
+      name: name || 'New Beneficiary',
+      accountNumber: accountNumber || '9988776655',
+      routingNumber: routingNumber || '121000358',
+      ofacScreening: 'CLEARED',
+      timestamp: new Date().toISOString(),
+    });
+  });
+
+  // Support Ticket Endpoint
+  app.post('/api/support/tickets', (req, res) => {
+    const { subject, category, priority, message } = req.body;
+    res.json({
+      status: 'OPEN',
+      ticketId: `tkt_wtb_${Math.floor(1000 + Math.random() * 9000)}`,
+      subject: subject || 'Customer Inquiry',
+      category: category || 'GENERAL',
+      priority: priority || 'MEDIUM',
+      assignedQueue: 'VIP_PRIVATE_CLIENT_DESK',
+      timestamp: new Date().toISOString(),
+    });
+  });
+
+  // Investment Trading Endpoint
+  app.post('/api/investments/order', (req, res) => {
+    const { symbol, orderType, shares, action } = req.body;
+    res.json({
+      status: 'FILLED',
+      orderId: `ord_${Date.now()}`,
+      symbol: symbol || 'VTI',
+      action: action || 'BUY',
+      shares: parseFloat(shares) || 10,
+      executionPrice: 284.50,
+      clearingBroker: 'Western Trust Securities LLC (FINRA/SIPC)',
+      timestamp: new Date().toISOString(),
+    });
+  });
+
+  // User Profile Settings Endpoint
+  app.post('/api/user/profile', (req, res) => {
+    res.json({
+      status: 'UPDATED',
+      message: 'Profile security & notification preferences persisted.',
+      timestamp: new Date().toISOString(),
     });
   });
 

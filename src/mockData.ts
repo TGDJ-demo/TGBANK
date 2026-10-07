@@ -405,21 +405,24 @@ export const DEFAULT_LOANS: LoanApplication[] = [
 
 export const DEFAULT_CREDIT_CARDS: CreditCardDetails[] = [
   {
-    id: 'card_sig_001',
-    cardNumberMasked: '•••• •••• •••• 4444',
-    cardHolderName: 'JOHN DOE',
-    expiryDate: '09/29',
-    cardType: 'VISA_SIGNATURE',
-    creditLimit: 20000,
-    currentBalance: 1840.50,
-    availableCredit: 18159.50,
-    rewardsPoints: 48250,
+    id: 'card_centurion_black',
+    cardNumberMasked: '•••• •••••• •8821',
+    cardNumberFull: '3782 822490 91008',
+    cvv: '8492',
+    billingZip: '28202',
+    cardHolderName: 'SANJAY G',
+    expiryDate: '10/29',
+    cardType: 'AMEX_CENTURION_BLACK',
+    creditLimit: 150000,
+    currentBalance: 4250.00,
+    availableCredit: 145750.00,
+    rewardsPoints: 245000,
     isFrozen: false,
     isBlocked: false,
-    billingCycleDay: 15,
-    minPaymentDue: 45.00,
-    paymentDueDate: '2026-08-15',
-    virtualCardNumber: '4111 •••• •••• 9921',
+    billingCycleDay: 20,
+    minPaymentDue: 150.00,
+    paymentDueDate: '2026-08-20',
+    virtualCardNumber: '3782 •••••• •1008',
   },
 ];
 
@@ -1046,6 +1049,11 @@ export const DEFAULT_CHAOS_FLAGS: ChaosFeatureFlags = {
   weakSecurityMode: false,
   heavyDomMode: false,
   brokenWorkflows: false,
+  packetJitterDrop: false,
+  sslCertWarning: false,
+  staleCsrfToken: false,
+  rateLimitBurst: false,
+  sessionExpiryChaos: false,
 };
 
 // Deterministic seed transactions generator

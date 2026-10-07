@@ -47,8 +47,11 @@ export const ToastContainer: React.FC = () => {
             <button
               id={`btn-close-toast-${toast.id}`}
               data-testid={`btn-close-toast-${toast.id}`}
+              data-automation-id="btn-close-toast"
+              name={`btn-close-toast-${toast.id}`}
+              aria-label="Dismiss Alert Notification"
               onClick={() => removeToast(toast.id)}
-              className="text-slate-400 hover:text-white cursor-pointer"
+              className="p-1 rounded-md text-slate-400 hover:text-white hover:bg-white/10 transition cursor-pointer shrink-0"
             >
               <X className="w-4 h-4" />
             </button>
