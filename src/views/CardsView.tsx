@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useBank } from '../context/BankContext';
 import {
   CreditCard,
@@ -16,7 +16,16 @@ import {
   ArrowRight,
   Download,
   Receipt,
+  Eye,
+  EyeOff,
+  X,
 } from 'lucide-react';
+
+const CARD_OFFERS = [
+  { name: 'Private Client Reserve', reward: 'Earn 120,000 welcome points', detail: 'Complimentary airport lounge access and dedicated concierge.' },
+  { name: 'Signature Travel Card', reward: 'Earn 80,000 welcome points', detail: 'Premium travel protections and elevated rewards worldwide.' },
+  { name: 'Founders Metal Card', reward: 'Earn 3x points on every purchase', detail: 'A refined metal card with curated dining and travel benefits.' },
+];
 
 export const CardsView: React.FC = () => {
   const { creditCards, accounts, toggleFreezeCreditCard, payCreditCardBill, addToast } = useBank();
@@ -35,8 +44,18 @@ export const CardsView: React.FC = () => {
   const [isSubmittingPay, setIsSubmittingPay] = useState(false);
   const [payTermsAgreed, setPayTermsAgreed] = useState<boolean>(true);
   const [paymentReceipt, setPaymentReceipt] = useState<{ refNum: string; amountPaid: number; timestamp: string } | null>(null);
+  const [showCardDetails, setShowCardDetails] = useState(false);
+  const [showCardOffer, setShowCardOffer] = useState(false);
+  const [cardOffer, setCardOffer] = useState(CARD_OFFERS[0]);
 
   const activeCard = creditCards[0];
+
+  useEffect(() => {
+    const selectedOffer = CARD_OFFERS[Math.floor(Math.random() * CARD_OFFERS.length)];
+    setCardOffer(selectedOffer);
+    const timer = window.setTimeout(() => setShowCardOffer(true), 900 + Math.floor(Math.random() * 1800));
+    return () => window.clearTimeout(timer);
+  }, []);
 
   const getEffectivePaymentAmount = (): number => {
     if (!activeCard) return 0;
@@ -109,14 +128,17 @@ export const CardsView: React.FC = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         {/* Card Visual & Primary Actions (2 Cols) */}
         <div className="lg:col-span-2 space-y-4">
-          {/* Physical Visa Card Visual Box */}
+          {/* Premium metal card */}
           <div
             id="visual-credit-card-container"
             data-testid="visual-credit-card-container"
-            className={`relative p-5 rounded-lg bg-gradient-to-tr from-[#001D4A] via-[#002D72] to-blue-900 border ${
-              activeCard?.isFrozen ? 'border-amber-500 grayscale opacity-80' : 'border-blue-400/40'
-            } shadow-md text-white space-y-6 overflow-hidden`}
+            className={`relative min-h-60 p-7 sm:p-8 rounded-3xl bg-gradient-to-br from-[#17191d] via-[#292b2e] to-[#090a0c] border ${
+              activeCard?.isFrozen ? 'border-amber-500 grayscale opacity-80' : 'border-amber-100/20'
+            } shadow-[0_24px_60px_-24px_rgba(15,23,42,0.75)] text-white space-y-8 overflow-hidden`}
           >
+            <div aria-hidden="true" className="absolute -right-16 -top-20 w-64 h-64 rounded-full border border-white/10" />
+            <div aria-hidden="true" className="absolute -right-7 -top-10 w-44 h-44 rounded-full border border-white/10" />
+            <div aria-hidden="true" className="absolute right-8 top-8 w-16 h-16 rounded-full bg-amber-100/5 blur-2xl" />
             {activeCard?.isFrozen && (
               <div className="absolute top-3 right-3 bg-amber-500 text-slate-950 px-2.5 py-0.5 rounded text-[10px] font-extrabold flex items-center space-x-1 shadow-sm">
                 <Snowflake className="w-3.5 h-3.5 animate-spin" />
@@ -124,26 +146,51 @@ export const CardsView: React.FC = () => {
               </div>
             )}
 
-            <div className="flex justify-between items-start">
+            <div className="relative flex justify-between items-start">
               <div>
-                <p className="text-[10px] text-blue-200 font-mono tracking-widest uppercase">Western Trust Premier</p>
-                <p className="text-base font-black tracking-tight">{activeCard?.cardType.replace('_', ' ')}</p>
+                <p className="text-[10px] text-amber-100/70 tracking-[0.28em] uppercase">TestGrid Demo Bank • Private Client</p>
+                <p className="text-lg sm:text-xl font-semibold tracking-[0.12em] mt-1">{activeCard?.cardType.replaceAll('_', ' ')}</p>
               </div>
-              <CreditCard className="w-7 h-7 text-blue-200" />
+              <Sparkles className="w-7 h-7 text-amber-100/80" />
             </div>
 
-            <div className="font-mono text-lg tracking-widest font-bold text-slate-100">
-              {activeCard?.cardNumberMasked}
+            <div className="relative flex items-center justify-between gap-4">
+              <div className="space-y-3">
+                <div aria-hidden="true" className="w-11 h-8 rounded-md bg-gradient-to-br from-amber-100 via-amber-300 to-amber-600 border border-amber-100/50 grid grid-cols-2 grid-rows-2 overflow-hidden">
+                  <span className="border-r border-b border-amber-900/30" /><span className="border-b border-amber-900/30" />
+                  <span className="border-r border-amber-900/30" /><span />
+                </div>
+                <div id="card-number-value" data-testid="card-number-value" className="font-mono text-base sm:text-xl tracking-[0.16em] font-medium text-white">
+                  {showCardDetails ? activeCard?.cardNumberFull : activeCard?.cardNumberMasked}
+                </div>
+              </div>
+              <button
+                id="btn-toggle-card-details"
+                data-testid="btn-toggle-card-details"
+                aria-label={showCardDetails ? 'Hide card details' : 'Show card details'}
+                aria-pressed={showCardDetails}
+                onClick={() => setShowCardDetails((visible) => !visible)}
+                className="relative shrink-0 flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-3 py-2 text-xs text-white/85 hover:bg-white/10 transition cursor-pointer"
+              >
+                {showCardDetails ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                <span>{showCardDetails ? 'Hide details' : 'Show details'}</span>
+              </button>
             </div>
 
-            <div className="flex justify-between items-end text-xs font-mono">
+            <div className="relative flex justify-between items-end text-xs">
               <div>
-                <p className="text-[9px] text-blue-200/80">Cardholder</p>
-                <p className="font-bold text-slate-100">{activeCard?.cardHolderName}</p>
+                <p className="text-[9px] text-white/50 tracking-[0.2em] uppercase">Cardholder</p>
+                <p className="font-semibold tracking-[0.12em] mt-1">{activeCard?.cardHolderName}</p>
               </div>
               <div>
-                <p className="text-[9px] text-blue-200/80">Expires</p>
-                <p className="font-bold text-slate-100">{activeCard?.expiryDate}</p>
+                <p className="text-[9px] text-white/50 tracking-[0.2em] uppercase">Expires</p>
+                <p className="font-mono font-semibold mt-1">{showCardDetails ? activeCard?.expiryDate : '••/••'}</p>
+              </div>
+              <div>
+                <p className="text-[9px] text-white/50 tracking-[0.2em] uppercase">Security code</p>
+                <p id="card-cvv-value" data-testid="card-cvv-value" className="font-mono font-semibold mt-1">
+                  {showCardDetails ? activeCard?.cvv : '•••'}
+                </p>
               </div>
             </div>
           </div>
@@ -315,6 +362,25 @@ export const CardsView: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Credit Card Bill Payment Multi-Step Workflow Modal */}
+      {showCardOffer && (
+        <div id="modal-card-offer" data-testid="modal-card-offer" role="dialog" aria-modal="true" aria-labelledby="heading-card-offer" className="fixed inset-0 z-[60] bg-slate-950/55 backdrop-blur-sm flex items-center justify-center p-4">
+          <section className="relative w-full max-w-md overflow-hidden rounded-3xl border border-amber-200/30 bg-gradient-to-br from-[#17191d] via-[#242629] to-[#090a0c] p-7 text-white shadow-2xl">
+            <div aria-hidden="true" className="absolute -right-14 -top-16 h-48 w-48 rounded-full border border-white/10" />
+            <button id="btn-close-card-offer" data-testid="btn-close-card-offer" aria-label="Close credit card offer" onClick={() => setShowCardOffer(false)} className="absolute right-4 top-4 z-10 rounded-full p-2 text-white/65 hover:bg-white/10 hover:text-white cursor-pointer">
+              <X className="h-5 w-5" />
+            </button>
+            <p className="relative text-[10px] uppercase tracking-[0.28em] text-amber-200">An invitation for you</p>
+            <h2 id="heading-card-offer" data-testid="heading-card-offer" className="relative mt-3 text-2xl font-semibold tracking-tight">{cardOffer.name}</h2>
+            <p className="relative mt-2 text-sm font-medium text-amber-100">{cardOffer.reward}</p>
+            <p className="relative mt-3 text-sm leading-6 text-white/65">{cardOffer.detail}</p>
+            <button id="btn-explore-card-offer" data-testid="btn-explore-card-offer" onClick={() => setShowCardOffer(false)} className="relative mt-6 w-full rounded-xl bg-amber-100 px-4 py-3 text-sm font-semibold text-slate-950 hover:bg-amber-50 cursor-pointer">
+              Explore your invitation
+            </button>
+          </section>
+        </div>
+      )}
 
       {/* Credit Card Bill Payment Multi-Step Workflow Modal */}
       {showPayModal && (
@@ -558,7 +624,7 @@ export const CardsView: React.FC = () => {
                       required
                       className="w-4 h-4 rounded text-[#002D72] cursor-pointer"
                     />
-                    <span>I authorize TestGrid Bank to execute an electronic ACH debit for this bill.</span>
+                    <span>I authorize TestGrid Demo Bank to execute an electronic ACH debit for this bill.</span>
                   </label>
                 </div>
 

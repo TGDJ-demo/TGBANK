@@ -18,7 +18,7 @@ export const SupportView: React.FC = () => {
 
   // Live Chat state
   const [chatMessages, setChatMessages] = useState<{ sender: string; text: string; isAgent: boolean; time: string }[]>([
-    { sender: 'Western AI Assistant', text: 'Hello! I am your Western Trust AI Assistant. How can I help you today?', isAgent: true, time: '11:40 AM' },
+    { sender: 'TestGrid Demo Bank Assistant', text: 'Hello! How can the TestGrid Demo Bank team help you today?', isAgent: true, time: '11:40 AM' },
   ]);
   const [chatInput, setChatInput] = useState('');
 
@@ -162,14 +162,14 @@ export const SupportView: React.FC = () => {
         </div>
       )}
 
-      {/* Tab 2: Live AI Support Chat */}
+      {/* Tab 2: Live Support Chat */}
       {activeTab === 'CHAT' && (
         <div id="widget-live-chat" data-testid="widget-live-chat" className="bg-white border border-slate-200 rounded-lg p-5 shadow-sm space-y-3 max-w-2xl mx-auto">
           <div className="flex items-center space-x-2.5 pb-2.5 border-b border-slate-200">
             <div className="w-2.5 h-2.5 bg-emerald-600 rounded-full animate-ping" />
             <div>
-              <h3 className="text-xs font-bold text-slate-900">Western Trust AI Support Assistant</h3>
-              <p className="text-[10px] text-slate-500">Powered by Gemini AI • Online 24/7</p>
+              <h3 className="text-xs font-bold text-slate-900">TestGrid Demo Bank Private Client Support</h3>
+              <p className="text-[10px] text-slate-500">A dedicated team is available around the clock</p>
             </div>
           </div>
 
@@ -231,7 +231,7 @@ export const SupportView: React.FC = () => {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-1">
             {[
-              { name: 'Western Trust Main Plaza Branch & ATM', address: '100 Market St, San Francisco, CA 94105', dist: '0.4 miles', status: 'Open until 5:00 PM' },
+              { name: 'TestGrid Demo Bank Main Plaza Branch & ATM', address: '100 Market St, San Francisco, CA 94105', dist: '0.4 miles', status: 'Open until 5:00 PM' },
               { name: 'Financial District Drive-Thru ATM', address: '450 Montgomery St, San Francisco, CA 94104', dist: '0.8 miles', status: '24/7 ATM Access' },
             ].map((loc, idx) => (
               <div key={idx} className="p-3 bg-slate-50 rounded border border-slate-200 space-y-1">

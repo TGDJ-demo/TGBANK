@@ -31,22 +31,38 @@ export const InvestmentsView: React.FC = () => {
   const totalValue = investments.reduce((sum, i) => sum + i.totalValue, 0);
   const totalGain = investments.reduce((sum, i) => sum + i.unrealizedGainLoss, 0);
 
-  const handleExecuteTrade = (e: React.FormEvent) => {
+  const handleExecuteTrade = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!tradeAgreement) {
       addToast({ type: 'error', title: 'Terms Required', message: 'Please acknowledge the order execution disclaimer.' });
       return;
     }
     setIsExecutingTrade(true);
-    setTimeout(() => {
-      setIsExecutingTrade(false);
+    try {
+      const response = await fetch('/api/investments/order', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ symbol: tradeSymbol, orderType, shares: tradeShares, action: 'BUY' }),
+      });
+      if (!response.ok) {
+        throw new Error(`Order request failed with HTTP ${response.status}.`);
+      }
+      const order = await response.json();
       setShowTradeModal(false);
       addToast({
         type: 'success',
         title: 'Order Executed Successfully',
-        message: `Purchased ${tradeShares} shares of ${tradeSymbol} for $${estimatedOrderCost.toLocaleString('en-US', { minimumFractionDigits: 2 })} USD.`,
+        message: `Purchased ${tradeShares} shares of ${tradeSymbol} for $${estimatedOrderCost.toLocaleString('en-US', { minimumFractionDigits: 2 })} USD. Order ${order.orderId}.`,
       });
-    }, 600);
+    } catch (error) {
+      addToast({
+        type: 'error',
+        title: 'Order Could Not Be Completed',
+        message: error instanceof Error ? error.message : 'The investment API request failed.',
+      });
+    } finally {
+      setIsExecutingTrade(false);
+    }
   };
 
   return (
@@ -447,7 +463,7 @@ export const InvestmentsView: React.FC = () => {
                   required
                   className="w-4 h-4 rounded text-[#002D72] border-slate-300 focus:ring-0 cursor-pointer"
                 />
-                <span>I authorize TestGrid Wealth to execute this trade order.</span>
+                <span>I authorize TestGrid Demo Bank Wealth to execute this trade order.</span>
               </label>
             </div>
 

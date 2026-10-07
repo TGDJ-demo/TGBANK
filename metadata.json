@@ -1,6 +1,6 @@
 {
-  "name": "TestGrid Bank Demo",
-  "description": "Enterprise Demo Banking Application built with stable Selenium locators, live account workflows, loan processing, and custom test data management.",
+  "name": "TestGrid Demo Bank",
+  "description": "A refined digital banking experience for everyday accounts, payments, lending, and wealth.",
   "requestFramePermissions": [],
-  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+  "majorCapabilities": ["DIGITAL_BANKING", "PAYMENTS", "LENDING", "WEALTH_MANAGEMENT"]
 }

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { BankProvider, useBank } from './context/BankContext';
 import { Header } from './components/Header';
 import { Sidebar } from './components/Sidebar';
@@ -23,6 +23,58 @@ const MainAppContent: React.FC = () => {
   const { activeView, isAuthenticated, featureFlags, login } = useBank();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [testDataModalOpen, setTestDataModalOpen] = useState(false);
+
+  useEffect(() => {
+    const root = document.getElementById('app-root-layout');
+    if (!root) return;
+
+    const selector = 'button, input, select, textarea, a, [role="button"], [role="link"], [role="checkbox"], [role="switch"], [role="tab"]';
+    const identifyControls = () => {
+      const occurrences = new Map<string, number>();
+      root.querySelectorAll<HTMLElement>(selector).forEach((element) => {
+        const scope = element.closest<HTMLElement>('[data-testid], [id]');
+        const group = scope?.dataset.testid || scope?.id || 'banking-app';
+        const text = (
+          element.getAttribute('aria-label') ||
+          element.getAttribute('name') ||
+          element.getAttribute('placeholder') ||
+          element.getAttribute('title') ||
+          element.textContent ||
+          element.tagName
+        )
+          .trim()
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, '-')
+          .replace(/^-|-$/g, '')
+          .slice(0, 48) || element.tagName.toLowerCase();
+        const base = element.dataset.testid || element.id || `auto-${group}-${element.tagName.toLowerCase()}-${text}`;
+        const occurrence = occurrences.get(base) || 0;
+        occurrences.set(base, occurrence + 1);
+        const uniqueId = occurrence === 0 ? base : `${base}-${occurrence + 1}`;
+
+        if (!element.id || root.querySelectorAll(`#${CSS.escape(element.id)}`).length > 1) {
+          element.id = uniqueId;
+        }
+        if (!element.dataset.testid || occurrence > 0) {
+          element.dataset.testid = uniqueId;
+        }
+        if (!element.dataset.automationId || occurrence > 0) {
+          element.dataset.automationId = uniqueId;
+        }
+        if (!element.getAttribute('name') && /^(INPUT|SELECT|TEXTAREA)$/.test(element.tagName)) {
+          element.setAttribute('name', uniqueId);
+        }
+        if (!element.getAttribute('aria-label') && element.tagName === 'BUTTON' && !element.textContent?.trim()) {
+          element.setAttribute('aria-label', text.replaceAll('-', ' '));
+        }
+      });
+    };
+
+    identifyControls();
+    const observer = new MutationObserver(identifyControls);
+    observer.observe(root, { childList: true, subtree: true });
+    return () => observer.disconnect();
+  }, [isAuthenticated, activeView, sidebarOpen, testDataModalOpen]);
 
   const renderActiveView = () => {
     switch (activeView?.toLowerCase()) {

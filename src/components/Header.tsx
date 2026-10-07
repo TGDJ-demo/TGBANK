@@ -62,14 +62,14 @@ export const Header: React.FC<{ onToggleSidebar?: () => void; onOpenTestDataModa
               data-testid="brand-title-text"
               className="text-lg font-bold tracking-tight text-white font-sans"
             >
-              TESTGRID BANK
+              TESTGRID DEMO BANK
             </span>
             <span
               id="brand-subtitle-badge"
               data-testid="brand-subtitle-badge"
               className="text-[10px] font-bold px-2 py-0.5 bg-blue-900/80 text-blue-100 rounded border border-blue-400/30 uppercase tracking-wider"
             >
-              Demo Platform
+              Private Client
             </span>
           </div>
         </div>

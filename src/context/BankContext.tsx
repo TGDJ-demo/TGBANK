@@ -71,11 +71,12 @@ interface BankContextType {
   toggleFreezeCreditCard: (cardId: string) => void;
   addBeneficiary: (ben: Omit<Beneficiary, 'id'>) => void;
   createSupportTicket: (ticket: Partial<SupportTicket>) => void;
-  updateLoanStatus: (loanId: string, status: LoanApplication['status'], notes?: string) => void;
-  advanceLoanStage: (loanId: string, nextStage: LoanApplication['stage'], notes?: string) => void;
-  disburseLoan: (loanId: string, targetAccountId: string) => void;
+  updateLoanStatus: (loanId: string, status: LoanApplication['status'], notes?: string) => Promise<void>;
+  advanceLoanStage: (loanId: string, nextStage: LoanApplication['stage'], notes?: string) => Promise<void>;
+  disburseLoan: (loanId: string, targetAccountId: string) => Promise<void>;
   markAllNotificationsRead: () => void;
   exportTransactions: (format: 'CSV' | 'JSON') => void;
+  downloadStatement: () => Promise<void>;
 
   // Custom Test Data Handlers
   addCustomAccount: (acc: Partial<BankAccount>) => void;
@@ -163,7 +164,7 @@ export const BankProvider: React.FC<{ children: React.ReactNode }> = ({ children
     addToast({
       type: 'info',
       title: 'Signed Out',
-      message: 'You have been logged out of TestGrid Bank Demo session.',
+      message: 'You have been securely signed out of TestGrid Demo Bank.',
     });
   };
 
@@ -171,9 +172,6 @@ export const BankProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const id = `toast_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
     const newToast = { ...toast, id };
     setToasts((prev) => [...prev, newToast]);
-    setTimeout(() => {
-      removeToast(id);
-    }, 4500);
   };
 
   const removeToast = (id: string) => {
@@ -212,6 +210,24 @@ export const BankProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const requestDemoApi = async (endpoint: string, payload: Record<string, unknown>) => {
+    try {
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      if (!response.ok) {
+        throw new Error(`Request to ${endpoint} failed with HTTP ${response.status}.`);
+      }
+      return await response.json();
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'The demo API request failed.';
+      addToast({ type: 'error', title: 'Demo API Request Failed', message });
+      throw error;
+    }
+  };
+
   const executeTransfer = async (req: MoneyTransferRequest): Promise<MoneyTransferResult> => {
     await simulateDelay();
 
@@ -233,6 +249,17 @@ export const BankProvider: React.FC<{ children: React.ReactNode }> = ({ children
       });
       throw new Error('Insufficient Funds');
     }
+
+    await requestDemoApi('/api/transfers', {
+      ...req,
+      toAccountName:
+        (req.toAccountId && (
+          accounts.find((account) => account.id === req.toAccountId)?.name ||
+          INTERNAL_BANK_ACCOUNTS.find((account) => account.id === req.toAccountId)?.name
+        )) ||
+        req.externalBankName ||
+        'External Beneficiary',
+    });
 
     // Deduct balance
     const updatedAccounts = accounts.map((acc) => {
@@ -331,6 +358,12 @@ export const BankProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return false;
     }
 
+    try {
+      await requestDemoApi('/api/cards/payment', { cardId, sourceAccountId, amount });
+    } catch {
+      return false;
+    }
+
     setAccounts((prev) =>
       prev.map((a) => (a.id === sourceAccountId ? { ...a, balance: a.balance - amount, availableBalance: a.availableBalance - amount } : a))
     );
@@ -394,6 +427,18 @@ export const BankProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return false;
     }
 
+    const billObj = bills.find((bill) => bill.id === billId);
+    try {
+      await requestDemoApi('/api/bills/pay', {
+        billId,
+        billerName: billObj?.billerName,
+        accountId,
+        amount,
+      });
+    } catch {
+      return false;
+    }
+
     setAccounts((prev) =>
       prev.map((a) => (a.id === accountId ? { ...a, balance: a.balance - amount, availableBalance: a.availableBalance - amount } : a))
     );
@@ -410,8 +455,6 @@ export const BankProvider: React.FC<{ children: React.ReactNode }> = ({ children
           : b
       )
     );
-
-    const billObj = bills.find((b) => b.id === billId);
 
     const refNum = `WTB-PAY-${Math.floor(10000000 + Math.random() * 90000000)}`;
     setTransactions((prev) => [
@@ -443,6 +486,11 @@ export const BankProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const submitLoanApplication = async (loanData: Partial<LoanApplication>): Promise<LoanApplication> => {
     await simulateDelay();
+    await requestDemoApi('/api/loans/apply', {
+      ...loanData,
+      applicantName: currentUser.name,
+      userId: currentUser.id,
+    });
     const newLoan: LoanApplication = {
       id: `loan_app_${Date.now()}`,
       userId: currentUser.id,
@@ -472,7 +520,19 @@ export const BankProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return newLoan;
   };
 
-  const updateLoanStatus = (loanId: string, status: LoanApplication['status'], notes?: string) => {
+  const updateLoanStatus = async (loanId: string, status: LoanApplication['status'], notes?: string) => {
+    const loan = loans.find((item) => item.id === loanId);
+    if (!loan) return;
+    try {
+      await requestDemoApi('/api/loans/stage', {
+        loanId,
+        nextStage: status === 'APPROVED' || status === 'REJECTED' || status === 'DISBURSED' ? status : loan.stage,
+        status,
+        notes,
+      });
+    } catch {
+      return;
+    }
     setLoans((prev) =>
       prev.map((l) => (l.id === loanId ? { ...l, status, reviewerNotes: notes || l.reviewerNotes } : l))
     );
@@ -559,19 +619,66 @@ export const BankProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `Western_Trust_Transactions_${new Date().toISOString().split('T')[0]}.csv`;
+      a.download = `TestGrid_Demo_Bank_Transactions_${new Date().toISOString().split('T')[0]}.csv`;
       a.click();
     } else {
       const blob = new Blob([JSON.stringify(transactions, null, 2)], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `Western_Trust_Transactions_${new Date().toISOString().split('T')[0]}.json`;
+      a.download = `TestGrid_Demo_Bank_Transactions_${new Date().toISOString().split('T')[0]}.json`;
       a.click();
     }
   };
 
-  const advanceLoanStage = (loanId: string, nextStage: LoanApplication['stage'], notes?: string) => {
+  const downloadStatement = async () => {
+    const account = accounts[0];
+    const statementPeriod = new Date().toLocaleString('en-US', { month: 'long', year: 'numeric' });
+    try {
+      await requestDemoApi('/api/statements/download', {
+        accountId: account?.id,
+        statementPeriod,
+        format: 'CSV',
+      });
+    } catch {
+      return;
+    }
+
+    const headers = ['Date', 'Account', 'Description', 'Category', 'Amount', 'Status', 'Reference'];
+    const csvEscape = (value: string | number) => `"${String(value).replaceAll('"', '""')}"`;
+    const rows = transactions.map((transaction) => [
+      transaction.date,
+      transaction.accountName,
+      transaction.merchant,
+      transaction.category,
+      transaction.amount.toFixed(2),
+      transaction.status,
+      transaction.referenceNumber,
+    ]);
+    const csvContent = [
+      ['TestGrid Demo Bank Statement', statementPeriod].map(csvEscape).join(','),
+      ['Account', account?.name || 'All accounts'].map(csvEscape).join(','),
+      '',
+      headers.map(csvEscape).join(','),
+      ...rows.map((row) => row.map(csvEscape).join(',')),
+    ].join('\n');
+    const url = URL.createObjectURL(new Blob([csvContent], { type: 'text/csv;charset=utf-8' }));
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `TestGrid_Demo_Bank_Statement_${new Date().toISOString().split('T')[0]}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+    addToast({ type: 'success', title: 'Statement Downloaded', message: `${statementPeriod} statement saved as a CSV file.` });
+  };
+
+  const advanceLoanStage = async (loanId: string, nextStage: LoanApplication['stage'], notes?: string) => {
+    try {
+      await requestDemoApi('/api/loans/stage', { loanId, nextStage, notes });
+    } catch {
+      return;
+    }
     setLoans((prev) =>
       prev.map((l) => {
         if (l.id === loanId) {
@@ -593,9 +700,19 @@ export const BankProvider: React.FC<{ children: React.ReactNode }> = ({ children
     });
   };
 
-  const disburseLoan = (loanId: string, targetAccountId: string) => {
+  const disburseLoan = async (loanId: string, targetAccountId: string): Promise<void> => {
     const loan = loans.find((l) => l.id === loanId);
     if (!loan) return;
+
+    try {
+      await requestDemoApi('/api/loans/disburse', {
+        loanId,
+        targetAccountId,
+        amount: loan.requestedAmount,
+      });
+    } catch {
+      return;
+    }
 
     // Credit target account balance
     setAccounts((prev) =>
@@ -806,6 +923,7 @@ export const BankProvider: React.FC<{ children: React.ReactNode }> = ({ children
         disburseLoan,
         markAllNotificationsRead,
         exportTransactions,
+        downloadStatement,
         addCustomAccount,
         addCustomTransaction,
         addCustomBeneficiary,

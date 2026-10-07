@@ -32,7 +32,7 @@ async function startServer() {
 
   // REST API Endpoints
   app.get('/api/health', (req, res) => {
-    res.json({ status: 'HEALTHY', bankName: 'Western Trust Bank', version: '2.5.0-ENTERPRISE', dbStatus: 'CONNECTED' });
+    res.json({ status: 'HEALTHY', bankName: 'TestGrid Demo Bank', version: '2.5.0-ENTERPRISE', dbStatus: 'CONNECTED' });
   });
 
   app.post('/api/auth/login', (req, res) => {
@@ -81,10 +81,12 @@ async function startServer() {
       toAccountName: toAccountName || 'Internal Account',
       amount: parseFloat(amount) || 100,
       transferType: transferType || 'INTERNAL',
+      type: transferType || 'INTERNAL',
       memo: memo || '',
       status: 'COMPLETED',
       rail: transferType === 'WIRE' ? 'FEDWIRE_RTGS' : transferType === 'INTERNATIONAL' ? 'SWIFT_GPI' : 'INTERNAL_ACH',
       timestamp: new Date().toISOString(),
+      date: new Date().toISOString().split('T')[0],
     };
     mockTransfers.unshift(newTx);
     res.json({
@@ -289,7 +291,7 @@ async function startServer() {
       action: action || 'BUY',
       shares: parseFloat(shares) || 10,
       executionPrice: 284.50,
-      clearingBroker: 'Western Trust Securities LLC (FINRA/SIPC)',
+      clearingBroker: 'TestGrid Demo Bank Securities (FINRA/SIPC)',
       timestamp: new Date().toISOString(),
     });
   });
@@ -329,7 +331,7 @@ async function startServer() {
   app.get('/api/v3/api-docs', (req, res) => {
     res.json({
       openapi: '3.0.0',
-      info: { title: 'Western Trust Bank REST API', version: '2.5.0-ENTERPRISE', description: 'Enterprise REST API backing Western Trust Bank Test Automation Playground.' },
+      info: { title: 'TestGrid Demo Bank REST API', version: '2.5.0-ENTERPRISE', description: 'REST API backing the TestGrid Demo Bank banking playground.' },
       paths: {
         '/api/login': { post: { summary: 'User Authentication' } },
         '/api/accounts': { get: { summary: 'List Bank Accounts' } },
@@ -354,7 +356,7 @@ async function startServer() {
   }
 
   app.listen(PORT, '0.0.0.0', () => {
-    console.log(`Western Trust Bank Server running on http://localhost:${PORT}`);
+    console.log(`TestGrid Demo Bank server running on http://localhost:${PORT}`);
   });
 }
 

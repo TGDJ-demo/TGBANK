@@ -1,1 +1,301 @@
 @import "tailwindcss";
+
+@layer base {
+  :root {
+    font-family: Inter, "Aptos", "Segoe UI Variable", "Segoe UI", sans-serif;
+    font-synthesis: none;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    background: #f3f2f8;
+    color: #20213a;
+  }
+
+  body {
+    min-width: 360px;
+    min-height: 100vh;
+    margin: 0;
+    letter-spacing: -0.01em;
+  }
+
+  button,
+  input,
+  select,
+  textarea {
+    font-family: inherit;
+  }
+
+  button {
+    transition-duration: 180ms;
+  }
+}
+
+#app-root-layout {
+  background:
+    radial-gradient(ellipse at 88% 3%, rgb(163 126 236 / 11%), transparent 30rem),
+    radial-gradient(ellipse at 12% 92%, rgb(90 192 196 / 7%), transparent 26rem),
+    #f3f2f8 !important;
+}
+
+#header-navigation-bar {
+  color: #f8f7ff !important;
+  background:
+    radial-gradient(ellipse at 82% 0%, rgb(238 130 186 / 19%), transparent 24rem),
+    linear-gradient(105deg, #172a55 0%, #3e3279 48%, #176d78 100%) !important;
+  border-color: rgb(211 194 255 / 24%) !important;
+  box-shadow: 0 10px 30px rgb(38 35 91 / 18%) !important;
+}
+
+#header-navigation-bar #brand-logo-container {
+  color: #f0d5ff;
+  background: linear-gradient(145deg, rgb(222 194 255 / 24%), rgb(100 220 224 / 8%));
+  border-color: rgb(231 210 255 / 42%);
+  border-radius: 0.9rem;
+}
+
+#header-navigation-bar #brand-title-text {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 1.18rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+}
+
+#header-navigation-bar #brand-subtitle-badge {
+  color: #e8defe;
+  background: rgb(212 195 255 / 10%);
+  border-color: rgb(222 208 255 / 28%);
+  letter-spacing: 0.15em;
+}
+
+#main-content-canvas {
+  padding: clamp(1.35rem, 3.2vw, 3.5rem);
+}
+
+#sidebar-navigation-panel {
+  color: #35344f !important;
+  background: linear-gradient(180deg, #faf9ff 0%, #efeff8 100%) !important;
+  border-color: #dedced !important;
+  padding: 1.1rem 0.85rem;
+}
+
+#sidebar-user-summary-card {
+  background: linear-gradient(135deg, #fff, #f0eff9) !important;
+  border-color: #e1deef !important;
+  border-radius: 1rem !important;
+  padding: 0.9rem !important;
+  box-shadow: 0 7px 20px rgb(56 52 104 / 7%) !important;
+}
+
+#sidebar-nav-menu {
+  gap: 0.28rem;
+}
+
+#sidebar-nav-menu > button {
+  min-height: 2.65rem;
+  border-radius: 0.8rem !important;
+  padding-inline: 0.85rem !important;
+  letter-spacing: 0.005em;
+}
+
+#sidebar-nav-menu > button[aria-current="page"],
+#sidebar-nav-menu > button.bg-\[\#002D72\] {
+  background: linear-gradient(110deg, #3157a3 0%, #6548a6 56%, #287f8c 100%) !important;
+  box-shadow: 0 7px 16px rgb(65 65 145 / 22%) !important;
+}
+
+#sidebar-navigation-panel #btn-sidebar-logout {
+  border-radius: 0.8rem !important;
+}
+
+[data-testid$="-view-container"] > div:first-child h1 {
+  color: #292745 !important;
+  font-family: Georgia, "Times New Roman", serif;
+  font-weight: 500 !important;
+  font-size: clamp(1.65rem, 2.5vw, 2.15rem) !important;
+  letter-spacing: -0.035em !important;
+}
+
+[data-testid$="-view-container"] > div:first-child p {
+  color: #77768d !important;
+  font-size: 0.84rem !important;
+  line-height: 1.65;
+}
+
+[class*="bg-white"][class*="border"][class*="rounded"] {
+  border-color: #e3e0ef !important;
+  border-radius: 1.05rem !important;
+  box-shadow: 0 8px 24px rgb(51 46 104 / 6%), 0 1px 2px rgb(51 46 104 / 3%) !important;
+}
+
+[class*="bg-white"][class*="border"][class*="rounded"]:hover {
+  border-color: #c9c3e5 !important;
+}
+
+button {
+  border-radius: 0.72rem;
+  letter-spacing: 0.005em;
+}
+
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+a:focus-visible {
+  outline: 3px solid rgb(132 103 223 / 68%);
+  outline-offset: 2px;
+}
+
+[class*="bg-[#002D72]"],
+[class*="bg-[#001D4A]"] {
+  background: linear-gradient(110deg, #315db2 0%, #684ab1 58%, #258b94 100%) !important;
+}
+
+#app-root-layout button[class*="bg-[#002D72]"],
+#app-root-layout button[class*="bg-[#001D4A]"] {
+  background: linear-gradient(110deg, #315db2 0%, #684ab1 58%, #258b94 100%) !important;
+  border-color: #6556aa !important;
+  color: #ffffff !important;
+}
+
+[class*="text-[#002D72]"] {
+  color: #4b4c91 !important;
+}
+
+[class*="border-[#002D72]"],
+[class*="border-[#001D4A]"] {
+  border-color: #7062b0 !important;
+}
+
+#dashboard-welcome-banner {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  padding: clamp(1.5rem, 3.5vw, 2.6rem) !important;
+  background:
+    radial-gradient(ellipse at 82% 7%, rgb(239 141 197 / 31%), transparent 17rem),
+    radial-gradient(ellipse at 28% 110%, rgb(67 211 205 / 22%), transparent 20rem),
+    linear-gradient(115deg, #172c5b 0%, #42377c 53%, #176c78 100%) !important;
+  border: 1px solid rgb(209 199 255 / 38%) !important;
+  border-radius: 1.5rem !important;
+  box-shadow: 0 24px 45px -26px rgb(34 38 102 / 55%) !important;
+}
+
+#dashboard-welcome-banner::after {
+  position: absolute;
+  z-index: -1;
+  top: -5.5rem;
+  right: -2rem;
+  width: 19rem;
+  height: 19rem;
+  border: 1px solid rgb(220 208 255 / 22%);
+  border-radius: 50%;
+  content: "";
+  box-shadow: 0 0 0 1.8rem rgb(220 208 255 / 5%), 0 0 0 3.6rem rgb(220 208 255 / 3%);
+}
+
+#dashboard-welcome-banner #heading-dashboard-welcome {
+  color: #ffffff !important;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(1.8rem, 3vw, 2.5rem);
+  font-weight: 500;
+  letter-spacing: -0.035em;
+}
+
+#dashboard-welcome-banner #badge-persona-role {
+  color: #eee7ff;
+  background: rgb(228 218 255 / 10%);
+  border-color: rgb(228 218 255 / 26%);
+  border-radius: 999px;
+  letter-spacing: 0.08em;
+}
+
+#dashboard-welcome-banner #subtext-last-login {
+  color: #e0e1f2 !important;
+  margin-top: 0.65rem;
+}
+
+#login-page-container {
+  background:
+    radial-gradient(ellipse at 82% 10%, rgb(231 121 189 / 25%), transparent 23rem),
+    radial-gradient(ellipse at 15% 88%, rgb(60 206 201 / 25%), transparent 25rem),
+    linear-gradient(135deg, #142753 0%, #403578 55%, #176875 100%) !important;
+}
+
+#login-card {
+  border-color: rgb(226 216 255 / 45%) !important;
+  border-radius: 1.5rem !important;
+  box-shadow: 0 35px 85px -35px rgb(0 0 0 / 75%) !important;
+}
+
+#login-card > div:first-child {
+  background:
+    radial-gradient(ellipse at 85% 0%, rgb(238 153 207 / 20%), transparent 14rem),
+    linear-gradient(110deg, #233b78, #59418e 58%, #267b83) !important;
+  border-color: #8e82ca !important;
+}
+
+#login-heading-title {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 1.65rem;
+  font-weight: 500;
+}
+
+input:not([type="range"]):not([type="checkbox"]):not([type="radio"]),
+select,
+textarea {
+  border-color: #dedbed !important;
+  border-radius: 0.78rem !important;
+  background-color: #fcfbff !important;
+  padding-block: 0.7rem !important;
+  font-size: 0.875rem !important;
+}
+
+input[type="range"],
+input[type="checkbox"],
+input[type="radio"] {
+  accent-color: #6557b6;
+}
+
+#grid-account-cards {
+  gap: 1rem !important;
+}
+
+#grid-account-cards > div {
+  min-height: 13rem;
+  border-radius: 1.2rem !important;
+  padding: 1.25rem !important;
+}
+
+#table-transactions-container {
+  border-radius: 1.1rem !important;
+}
+
+#table-transactions thead {
+  color: #f0edff;
+  background: linear-gradient(100deg, #293e77 0%, #4a3d80 58%, #236e78 100%) !important;
+}
+
+#table-transactions thead th {
+  padding-block: 1rem;
+  font-size: 0.64rem;
+  letter-spacing: 0.13em;
+}
+
+#table-transactions tbody tr {
+  height: 4.25rem;
+  transition: background-color 150ms ease;
+}
+
+#table-transactions tbody tr:hover {
+  background: #f4f2fb !important;
+}
+
+#toast-notification-container > div {
+  border-radius: 1rem !important;
+  box-shadow: 0 18px 44px rgb(33 34 85 / 24%) !important;
+}
+
+::selection {
+  background: #c9b9f1;
+  color: #20213a;
+}

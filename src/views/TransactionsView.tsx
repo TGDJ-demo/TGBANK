@@ -4,7 +4,7 @@ import { Search, Filter, ArrowUpDown, Download, FileText, ChevronLeft, ChevronRi
 import { Transaction } from '../types';
 
 export const TransactionsView: React.FC = () => {
-  const { transactions, exportTransactions } = useBank();
+  const { transactions, exportTransactions, downloadStatement } = useBank();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('ALL');
   const [sortField, setSortField] = useState<'date' | 'amount' | 'merchant'>('date');
@@ -53,11 +53,20 @@ export const TransactionsView: React.FC = () => {
             Transaction Ledger & Audit Trail
           </h1>
           <p id="subheading-transactions" data-testid="subheading-transactions" className="text-xs text-slate-500 mt-0.5">
-            Search, filter, sort, and validate transaction records with stable Selenium test locators.
+            A considered view of your recent banking activity, ready whenever you need it.
           </p>
         </div>
 
-        <div className="flex items-center space-x-2">
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            id="btn-download-bank-statement"
+            data-testid="btn-download-bank-statement"
+            onClick={() => void downloadStatement()}
+            className="px-3 py-1.5 bg-emerald-800 hover:bg-emerald-900 text-white rounded text-xs font-bold flex items-center gap-1.5 transition cursor-pointer"
+          >
+            <Download className="w-3.5 h-3.5" />
+            <span>Download bank statement</span>
+          </button>
           <button
             id="btn-export-csv"
             data-testid="btn-export-csv"
@@ -76,7 +85,7 @@ export const TransactionsView: React.FC = () => {
             className="px-3 py-1.5 bg-[#002D72] hover:bg-blue-900 text-white rounded text-xs font-bold flex items-center space-x-1.5 transition cursor-pointer"
           >
             <FileText className="w-3.5 h-3.5" />
-            <span>Export PDF/JSON</span>
+            <span>Export JSON</span>
           </button>
         </div>
       </div>

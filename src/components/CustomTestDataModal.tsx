@@ -546,7 +546,7 @@ export const CustomTestDataModal: React.FC<CustomTestDataModalProps> = ({ isOpen
               <div className="pt-3 border-t border-slate-200 flex items-center justify-between">
                 <div>
                   <span className="text-xs font-bold text-slate-900 block">Reset to Default Enterprise Seed</span>
-                  <span className="text-[10px] text-slate-500">Restores initial TestGrid Bank Demo records.</span>
+                  <span className="text-[10px] text-slate-500">Restores the initial TestGrid Demo Bank sample records.</span>
                 </div>
                 <button
                   id="btn-reset-seed-data"

@@ -100,7 +100,7 @@ export const ApiSwaggerView: React.FC = () => {
     if (path.includes('/v3/api-docs')) {
       return {
         openapi: '3.0.0',
-        info: { title: 'Western Trust Bank REST API', version: '2.5.0-ENTERPRISE' },
+        info: { title: 'TestGrid Demo Bank REST API', version: '2.5.0-ENTERPRISE' },
         paths: { '/api/login': { post: { summary: 'User Authentication' } } },
       };
     }
@@ -153,7 +153,7 @@ export const ApiSwaggerView: React.FC = () => {
           </span>
         </h1>
         <p id="subheading-swagger" data-testid="subheading-swagger" className="text-xs text-slate-500 mt-0.5">
-          Interactive REST API sandbox backing Western Trust Bank for headless API validation, Vercel deployments, & Postman testing.
+          Interactive REST API sandbox backing TestGrid Demo Bank for headless API validation, Vercel deployments, & Postman testing.
         </p>
       </div>
 

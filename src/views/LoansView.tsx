@@ -59,17 +59,22 @@ export const LoansView: React.FC = () => {
     const term = parseInt(termMonths, 10);
     const emi = calculateEmi(amt, term, 6.5);
 
-    await submitLoanApplication({
-      loanType,
-      requestedAmount: amt,
-      termMonths: term,
-      estimatedInterestRate: 6.5,
-      monthlyPayment: emi,
-      purpose,
-      annualIncome: parseFloat(annualIncome),
-      documents: uploadedFiles,
-    });
-    setIsSubmitting(false);
+    try {
+      await submitLoanApplication({
+        loanType,
+        requestedAmount: amt,
+        termMonths: term,
+        estimatedInterestRate: 6.5,
+        monthlyPayment: emi,
+        purpose,
+        annualIncome: parseFloat(annualIncome),
+        documents: uploadedFiles,
+      });
+    } catch {
+      return;
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -231,7 +236,7 @@ export const LoansView: React.FC = () => {
           <div id="form-loan-origination" data-testid="form-loan-origination" className="bg-white border border-slate-200 rounded-lg p-5 shadow-sm space-y-3">
             <h3 className="text-sm font-bold text-slate-900 flex items-center space-x-1.5">
               <Landmark className="w-4 h-4 text-[#002D72]" />
-              <span>Apply for TestGrid Bank Financing</span>
+              <span>Apply for TestGrid Demo Bank Financing</span>
             </h3>
 
             <form onSubmit={handleLoanSubmit} className="space-y-3">
@@ -424,7 +429,7 @@ export const LoansView: React.FC = () => {
                   data-testid="iframe-loan-disclosure-terms"
                   name="iframe-loan-disclosure-terms"
                   title="Truth in Lending Disclosure"
-                  srcDoc={`<!DOCTYPE html><html><body style="font-family:sans-serif;font-size:11px;color:#334155;margin:0;padding:8px;background:#f8fafc;"><strong>TestGrid Bank TILA Disclosures:</strong> Federal law requires full disclosure of loan interest rates, finance charges, and total loan payback amounts. By submitting this application, you authorize TestGrid Bank Demo to perform a hard credit inquiry with Equifax, Experian, or TransUnion. Late payments or default may be reported to consumer reporting agencies.</body></html>`}
+                  srcDoc={`<!DOCTYPE html><html><body style="font-family:sans-serif;font-size:11px;color:#334155;margin:0;padding:8px;background:#f8fafc;"><strong>TestGrid Demo Bank TILA Disclosures:</strong> Federal law requires full disclosure of loan interest rates, finance charges, and total loan payback amounts. By submitting this application, you authorize TestGrid Demo Bank to perform a hard credit inquiry with Equifax, Experian, or TransUnion. Late payments or default may be reported to consumer reporting agencies.</body></html>`}
                   className="w-full h-20 border border-slate-300 rounded bg-slate-50"
                 />
 
@@ -450,7 +455,7 @@ export const LoansView: React.FC = () => {
                       required
                       className="w-4 h-4 rounded text-[#002D72] focus:ring-0 cursor-pointer"
                     />
-                    <span>I authorize TestGrid Bank to obtain my credit bureau history report.</span>
+                    <span>I authorize TestGrid Demo Bank to obtain my credit bureau history report.</span>
                   </label>
 
                   <label
@@ -595,7 +600,7 @@ export const LoansView: React.FC = () => {
                             defaultValue={accounts[0]?.id}
                             onChange={(e) => {
                               const targetId = e.target.value;
-                              disburseLoan(app.id, targetId);
+                              void disburseLoan(app.id, targetId);
                             }}
                             className="w-full bg-white border border-emerald-300 rounded p-1 text-[10px] font-bold text-slate-800"
                           >

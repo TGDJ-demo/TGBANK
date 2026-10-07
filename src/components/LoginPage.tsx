@@ -233,14 +233,14 @@ export const LoginPage: React.FC = () => {
               data-testid="login-brand-name"
               className="text-xl font-bold tracking-tight text-white block leading-tight font-sans"
             >
-              TESTGRID BANK
+              TESTGRID DEMO BANK
             </span>
             <span
               id="login-brand-subtitle"
               data-testid="login-brand-subtitle"
               className="text-[11px] text-blue-200 tracking-wide font-medium"
             >
-              Core Banking Automation & Selenium Testing Rig
+              Secure digital banking
             </span>
           </div>
         </div>
@@ -311,7 +311,7 @@ export const LoginPage: React.FC = () => {
                 htmlFor="select-login-persona"
                 className="block text-[11px] font-extrabold text-slate-600 uppercase tracking-wider mb-1"
               >
-                Quick Select Persona (Selenium Dropdown):
+                Choose a demo profile:
               </label>
               <select
                 id="select-login-persona"
@@ -638,7 +638,7 @@ export const LoginPage: React.FC = () => {
       {/* Footer Info */}
       <div className="max-w-6xl w-full mx-auto text-center text-xs text-blue-200/70 py-2">
         <p>
-          TestGrid Bank Demo Platform • Designed for Selenium, Playwright, Appium & Cypress Automated Testing
+          TestGrid Demo Bank • Private banking, thoughtfully.
         </p>
       </div>
 

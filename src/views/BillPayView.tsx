@@ -284,7 +284,7 @@ export const BillPayView: React.FC = () => {
                   data-testid="iframe-bill-echeck-authorization"
                   name="iframe-bill-echeck-authorization"
                   title="ACH Electronic Check Authorization"
-                  srcDoc={`<!DOCTYPE html><html><body style="font-family:sans-serif;font-size:11px;color:#334155;margin:0;padding:8px;background:#f8fafc;"><strong>Electronic Check Payment Terms:</strong> By clicking Submit Payment, you authorize TestGrid Bank Demo to convert your transaction into an electronic fund transfer (EFT) or paper draft drawn on your selected deposit account. Funds may be withdrawn from your account as early as the same day.</body></html>`}
+                  srcDoc={`<!DOCTYPE html><html><body style="font-family:sans-serif;font-size:11px;color:#334155;margin:0;padding:8px;background:#f8fafc;"><strong>Electronic Check Payment Terms:</strong> By clicking Submit Payment, you authorize TestGrid Demo Bank to convert your transaction into an electronic fund transfer (EFT) or paper draft drawn on your selected deposit account. Funds may be withdrawn from your account as early as the same day.</body></html>`}
                   className="w-full h-16 border border-slate-300 rounded bg-slate-50"
                 />
 

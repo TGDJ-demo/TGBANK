@@ -59,7 +59,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({ onLoginSuccess }) => {
     addToast({
       type: 'success',
       title: 'Authentication Successful',
-      message: `Logged in to TestGrid Bank Demo as ${DEMO_PERSONAS[personaKey]?.name || 'User'}.`,
+      message: `Signed in to TestGrid Demo Bank as ${DEMO_PERSONAS[personaKey]?.name || 'User'}.`,
     });
 
     if (onLoginSuccess) {
@@ -112,7 +112,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({ onLoginSuccess }) => {
             <Building2 className="w-6 h-6 text-white" />
           </div>
           <h1 id="login-heading-title" data-testid="login-heading-title" className="text-xl font-bold tracking-tight text-white">
-            TESTGRID BANK DEMO
+            TESTGRID DEMO BANK
           </h1>
           <p id="login-heading-subtitle" data-testid="login-heading-subtitle" className="text-xs text-blue-200 mt-0.5">
             Enterprise Banking Platform for Live Testing & Automation

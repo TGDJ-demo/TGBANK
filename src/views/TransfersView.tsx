@@ -222,7 +222,7 @@ export const TransfersView: React.FC = () => {
                         ))}
                     </optgroup>
                   )}
-                  <optgroup label="Western Trust Bank Internal Department Accounts">
+                  <optgroup label="TestGrid Demo Bank Internal Department Accounts">
                     {INTERNAL_BANK_ACCOUNTS.map((acc) => (
                       <option
                         key={acc.id}
@@ -236,7 +236,7 @@ export const TransfersView: React.FC = () => {
                   </optgroup>
                 </select>
                 <p className="text-[11px] text-slate-500 mt-1">
-                  Instant internal settlement with zero transaction fees across all Western Trust Bank accounts.
+                  Instant internal settlement with zero transaction fees across all TestGrid Demo Bank accounts.
                 </p>
               </div>
             ) : (
@@ -536,7 +536,7 @@ export const TransfersView: React.FC = () => {
                 data-testid="iframe-wire-disclosure-terms"
                 name="iframe-wire-disclosure-terms"
                 title="Electronic Funds Transfer Disclosure"
-                srcDoc={`<!DOCTYPE html><html><body style="font-family:sans-serif;font-size:11px;color:#334155;margin:0;padding:8px;background:#f8fafc;"><strong>TestGrid Bank Electronic Funds Transfer Disclosure:</strong> By initiating this request, you authorize TestGrid Bank Demo to debit your selected source account. Wire transfers are final once processed through the Fedwire settlement ledger. International transfers are subject to FX currency conversion and intermediary bank fees. Rights under Regulation E apply to consumer account transactions.</body></html>`}
+                srcDoc={`<!DOCTYPE html><html><body style="font-family:sans-serif;font-size:11px;color:#334155;margin:0;padding:8px;background:#f8fafc;"><strong>TestGrid Demo Bank Electronic Funds Transfer Disclosure:</strong> By initiating this request, you authorize TestGrid Demo Bank to debit your selected source account. Wire transfers are final once processed through the Fedwire settlement ledger. International transfers are subject to FX currency conversion and intermediary bank fees. Rights under Regulation E apply to consumer account transactions.</body></html>`}
                 className="w-full h-20 border border-slate-300 rounded bg-slate-50"
               />
 
@@ -561,7 +561,7 @@ export const TransfersView: React.FC = () => {
                   required
                   className="w-4 h-4 rounded text-[#002D72] focus:ring-0 cursor-pointer"
                 />
-                <span>I have read the disclosure and authorize TestGrid Bank to execute this transfer.</span>
+                <span>I have read the disclosure and authorize TestGrid Demo Bank to execute this transfer.</span>
               </label>
             </div>
 
@@ -635,7 +635,7 @@ export const TransfersView: React.FC = () => {
             <div className="bg-white border border-slate-200 rounded-lg p-5 shadow-sm space-y-3">
               <h3 className="text-xs font-bold text-slate-900 flex items-center space-x-1.5">
                 <ShieldCheck className="w-4 h-4 text-[#002D72]" />
-                <span>Western Trust Security Limits</span>
+                <span>TestGrid Demo Bank Security Limits</span>
               </h3>
               <div className="space-y-1.5 text-xs text-slate-700 font-mono">
                 <div className="flex justify-between p-2 bg-slate-50 rounded border border-slate-200">
