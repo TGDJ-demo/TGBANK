@@ -1,0 +1,6 @@
+{
+  "name": "TestGrid Bank Demo",
+  "description": "Enterprise Demo Banking Application built with stable Selenium locators, live account workflows, loan processing, and custom test data management.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
