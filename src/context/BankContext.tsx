@@ -90,10 +90,52 @@ interface BankContextType {
 
 const BankContext = createContext<BankContextType | undefined>(undefined);
 
+const SESSION_STORAGE_KEY = 'testgrid-bank-session';
+const VALID_VIEWS = [
+  'dashboard',
+  'accounts',
+  'transactions',
+  'transfers',
+  'billpay',
+  'loans',
+  'cards',
+  'investments',
+  'profile',
+  'support',
+  'admin',
+  'swagger',
+] as const;
+
+const readPersistedSession = (): { personaKey: string; activeView: string } | null => {
+  try {
+    const saved = sessionStorage.getItem(SESSION_STORAGE_KEY);
+    if (!saved) return null;
+
+    const session: unknown = JSON.parse(saved);
+    if (
+      typeof session !== 'object' ||
+      session === null ||
+      !('personaKey' in session) ||
+      typeof session.personaKey !== 'string' ||
+      !DEMO_PERSONAS[session.personaKey] ||
+      !('activeView' in session) ||
+      typeof session.activeView !== 'string' ||
+      !VALID_VIEWS.includes(session.activeView as (typeof VALID_VIEWS)[number])
+    ) {
+      return null;
+    }
+
+    return { personaKey: session.personaKey, activeView: session.activeView };
+  } catch {
+    return null;
+  }
+};
+
 export const BankProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
-  const [currentPersonaKey, setCurrentPersonaKey] = useState<string>('customer');
-  const [currentUser, setCurrentUser] = useState<UserProfile>(DEMO_PERSONAS.customer);
+  const [initialSession] = useState(readPersistedSession);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(initialSession !== null);
+  const [currentPersonaKey, setCurrentPersonaKey] = useState<string>(initialSession?.personaKey || 'customer');
+  const [currentUser, setCurrentUser] = useState<UserProfile>(DEMO_PERSONAS[initialSession?.personaKey || 'customer']);
   const [accounts, setAccounts] = useState<BankAccount[]>(DEFAULT_ACCOUNTS);
   const [transactions, setTransactions] = useState<Transaction[]>(generateSeedTransactions(120));
   const [beneficiaries, setBeneficiaries] = useState<Beneficiary[]>(DEFAULT_BENEFICIARIES);
@@ -130,7 +172,7 @@ export const BankProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [featureFlags, setFeatureFlags] = useState<ChaosFeatureFlags>(DEFAULT_CHAOS_FLAGS);
   const [auditLogs, setAuditLogs] = useState<ApiAuditLog[]>(generateSeedAuditLogs(25));
   const [toasts, setToasts] = useState<Toast[]>([]);
-  const [activeView, setActiveView] = useState<string>('dashboard');
+  const [activeView, setActiveView] = useState<string>(initialSession?.activeView || 'dashboard');
 
   const loadPersonaData = (personaKey: string) => {
     const ds = PERSONA_DATASETS[personaKey] || PERSONA_DATASETS.customer;
@@ -144,6 +186,20 @@ export const BankProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setBills(ds.bills);
     }
   };
+
+  useEffect(() => {
+    if (initialSession) {
+      loadPersonaData(initialSession.personaKey);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      sessionStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify({ personaKey: currentPersonaKey, activeView }));
+    } else {
+      sessionStorage.removeItem(SESSION_STORAGE_KEY);
+    }
+  }, [isAuthenticated, currentPersonaKey, activeView]);
 
   const login = (personaKey?: string) => {
     const key = personaKey && DEMO_PERSONAS[personaKey] ? personaKey : 'customer';
