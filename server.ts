@@ -2,9 +2,8 @@ import express from 'express';
 import path from 'path';
 import { createServer as createViteServer } from 'vite';
 
-async function startServer() {
+export function createApiApp() {
   const app = express();
-  const PORT = 3000;
 
   app.use(express.json());
 
@@ -37,6 +36,18 @@ async function startServer() {
 
   app.post('/api/auth/login', (req, res) => {
     const { username, personaKey } = req.body;
+    res.json({
+      status: 'AUTHENTICATED',
+      token: `wtb_jwt_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`,
+      user: { username: username || 'admin.wtb', role: 'ADMIN', name: 'Sanjay G' },
+      mfaVerified: true,
+      sessionId: `sess_${Date.now()}`,
+      timestamp: new Date().toISOString(),
+    });
+  });
+
+  app.post('/api/login', (req, res) => {
+    const { username } = req.body;
     res.json({
       status: 'AUTHENTICATED',
       token: `wtb_jwt_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`,
@@ -340,7 +351,13 @@ async function startServer() {
     });
   });
 
-  // Vite middleware for development
+  return app;
+}
+
+async function startServer() {
+  const app = createApiApp();
+  const PORT = 3000;
+
   if (process.env.NODE_ENV !== 'production') {
     const vite = await createViteServer({
       server: { middlewareMode: true },
@@ -360,4 +377,6 @@ async function startServer() {
   });
 }
 
-startServer();
+if (process.env.VERCEL !== '1') {
+  void startServer();
+}
