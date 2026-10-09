@@ -356,9 +356,8 @@ export function createApiApp() {
 
 async function startServer() {
   const app = createApiApp();
-  const PORT = 3000;
 
-  if (process.env.NODE_ENV !== 'production') {
+  if (process.env.NODE_ENV !== 'production' && !process.env.VERCEL) {
     const vite = await createViteServer({
       server: { middlewareMode: true },
       appType: 'spa',
@@ -372,11 +371,10 @@ async function startServer() {
     });
   }
 
-  app.listen(PORT, '0.0.0.0', () => {
-    console.log(`TestGrid Demo Bank server running on http://localhost:${PORT}`);
+  const port = Number(process.env.PORT ?? 3000);
+  app.listen(port, '0.0.0.0', () => {
+    console.log(`TestGrid Demo Bank server running on port ${port}`);
   });
 }
 
-if (process.env.VERCEL !== '1') {
-  void startServer();
-}
+void startServer();
