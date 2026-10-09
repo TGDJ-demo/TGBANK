@@ -1,9 +1,30 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useBank } from '../context/BankContext';
 import { CheckCircle2, AlertCircle, Info, AlertTriangle, X } from 'lucide-react';
 
 export const ToastContainer: React.FC = () => {
   const { toasts, removeToast } = useBank();
+
+  useEffect(() => {
+    if (toasts.length === 0) return;
+
+    const dismissOnOutsideInteraction = (event: Event) => {
+      if (event.target instanceof Node && document.getElementById('toast-notification-container')?.contains(event.target)) {
+        return;
+      }
+      toasts.forEach((toast) => removeToast(toast.id));
+    };
+
+    document.addEventListener('pointerdown', dismissOnOutsideInteraction);
+    document.addEventListener('keydown', dismissOnOutsideInteraction);
+    document.addEventListener('focusin', dismissOnOutsideInteraction);
+
+    return () => {
+      document.removeEventListener('pointerdown', dismissOnOutsideInteraction);
+      document.removeEventListener('keydown', dismissOnOutsideInteraction);
+      document.removeEventListener('focusin', dismissOnOutsideInteraction);
+    };
+  }, [toasts, removeToast]);
 
   if (toasts.length === 0) return null;
 
@@ -22,10 +43,10 @@ export const ToastContainer: React.FC = () => {
         };
 
         const bgColors = {
-          success: 'bg-slate-900 border-emerald-500/50 text-emerald-100',
-          error: 'bg-slate-900 border-red-500/50 text-red-100',
-          warning: 'bg-slate-900 border-amber-500/50 text-amber-100',
-          info: 'bg-slate-900 border-blue-500/50 text-blue-100',
+          success: 'border-emerald-300/35 text-emerald-50',
+          error: 'border-rose-300/35 text-rose-50',
+          warning: 'border-amber-200/40 text-amber-50',
+          info: 'border-cyan-200/35 text-cyan-50',
         };
 
         return (
@@ -33,7 +54,7 @@ export const ToastContainer: React.FC = () => {
             key={toast.id}
             id={`toast-message-${toast.id}`}
             data-testid={`toast-message-${toast.id}`}
-            className={`pointer-events-auto p-3.5 rounded-xl border shadow-2xl flex items-start space-x-3 transition-all transform translate-y-0 ${bgColors[toast.type]}`}
+            className={`pointer-events-auto p-3.5 rounded-xl border bg-gradient-to-br from-[#292650]/90 via-[#26335e]/88 to-[#176b72]/85 shadow-2xl ring-1 ring-white/10 backdrop-blur-2xl flex items-start space-x-3 transition-all transform translate-y-0 ${bgColors[toast.type]}`}
           >
             {icons[toast.type]}
             <div className="flex-1">

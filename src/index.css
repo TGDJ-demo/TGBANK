@@ -131,6 +131,33 @@
   border-color: #c9c3e5 !important;
 }
 
+#card-checking-balance,
+#card-savings-balance,
+#card-credit-balance,
+#card-investment-balance,
+#val-selected-available-balance,
+[id^="acc-balance-"] {
+  display: inline-block;
+  max-width: 100%;
+  padding: 0.1rem 0.3rem;
+  border: 1px solid rgb(93 79 151 / 16%);
+  border-radius: 0.45rem;
+  background: rgb(91 78 148 / 7%);
+  backdrop-filter: blur(8px);
+  color: #20213a !important;
+  font-variant-numeric: tabular-nums lining-nums;
+}
+
+input:not([type="range"]):not([type="checkbox"]):not([type="radio"]),
+select,
+textarea {
+  border-color: #dedbed !important;
+  border-radius: 0.78rem !important;
+  background-color: #fcfbff !important;
+  padding-block: 0.7rem !important;
+  font-size: 0.875rem !important;
+}
+
 button {
   border-radius: 0.72rem;
   letter-spacing: 0.005em;

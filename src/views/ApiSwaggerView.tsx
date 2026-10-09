@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
 import { Code, Play, CheckCircle2, Copy, FileCode, RefreshCw, Server, ShieldCheck } from 'lucide-react';
+import { useBank } from '../context/BankContext';
 
 export const ApiSwaggerView: React.FC = () => {
+  const { featureFlags } = useBank();
   const [selectedEndpoint, setSelectedEndpoint] = useState<string>('GET /api/accounts');
   const [testResponse, setTestResponse] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -113,6 +115,22 @@ export const ApiSwaggerView: React.FC = () => {
 
     const ep = endpoints.find((e) => `${e.method} ${e.path}` === selectedEndpoint);
     if (!ep) {
+      setIsLoading(false);
+      return;
+    }
+
+    if (featureFlags.randomApiFailures && Math.random() * 100 < featureFlags.failureRatePercent) {
+      setTestResponse(
+        JSON.stringify(
+          {
+            status: 'ERROR',
+            statusCode: featureFlags.injectedErrorCode,
+            message: `Chaos simulator injected HTTP ${featureFlags.injectedErrorCode}.`,
+          },
+          null,
+          2
+        )
+      );
       setIsLoading(false);
       return;
     }
