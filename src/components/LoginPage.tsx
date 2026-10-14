@@ -233,7 +233,7 @@ export const LoginPage: React.FC = () => {
               data-testid="login-brand-name"
               className="text-xl font-bold tracking-tight text-white block leading-tight font-sans"
             >
-              TESTGRID DEMO BANK
+              BANK OF TESTGRID
             </span>
             <span
               id="login-brand-subtitle"
@@ -638,7 +638,7 @@ export const LoginPage: React.FC = () => {
       {/* Footer Info */}
       <div className="max-w-6xl w-full mx-auto text-center text-xs text-blue-200/70 py-2">
         <p>
-          TestGrid Demo Bank • Private banking, thoughtfully.
+          Bank of TestGrid • Private banking, thoughtfully.
         </p>
       </div>
 

@@ -135,7 +135,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, activeView: p
             Routing: <span className="font-mono text-slate-700 font-bold">121000358</span>
           </div>
           <div id="footer-environment-info" data-testid="footer-environment-info">
-            Env: <span className="text-emerald-700 font-mono font-bold">SELENIUM_TEST_RIG_v3.2</span>
+            Env: <span className="text-emerald-700 font-mono font-bold">Cotester_Demo_v3.2</span>
           </div>
         </div>
       </div>
