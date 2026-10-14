@@ -1,13 +1,24 @@
 import React, { useState } from 'react';
 import { useBank } from '../context/BankContext';
+import { DEMO_PERSONAS } from '../mockData';
 import { HelpCircle, MessageSquare, MapPin, Send, Plus, Paperclip, ChevronDown } from 'lucide-react';
 
 export const SupportView: React.FC = () => {
-  const { supportTickets, createSupportTicket, currentUser, addToast } = useBank();
+  const { supportTickets, createSupportTicket, updateSupportTicketStatus, currentUser, addToast } = useBank();
+  const isSupportAgent = currentUser.role === 'SUPPORT';
+  const isAdmin = currentUser.role === 'ADMIN';
+  const canManageTickets = isSupportAgent || isAdmin;
 
   const [activeTab, setActiveTab] = useState<'TICKETS' | 'CHAT' | 'LOCATOR'>('TICKETS');
   const [showCreateTicketModal, setShowCreateTicketModal] = useState(false);
   const [ticketSubject, setTicketSubject] = useState('');
+  const [selectedRequesterId, setSelectedRequesterId] = useState(isAdmin ? DEMO_PERSONAS.customer.id : currentUser.id);
+  const selectedRequester = isAdmin
+    ? Object.values(DEMO_PERSONAS).find((persona) => persona.id === selectedRequesterId) || currentUser
+    : currentUser;
+  const visibleTickets = canManageTickets
+    ? supportTickets
+    : supportTickets.filter((ticket) => ticket.userId === currentUser.id);
   const [ticketCategory, setTicketCategory] = useState<'ACCOUNT' | 'TRANSFER' | 'CARD' | 'LOAN' | 'SECURITY' | 'OTHER'>('TRANSFER');
   const [ticketPriority, setTicketPriority] = useState<'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL'>('MEDIUM');
   const [ticketUrgency, setTicketUrgency] = useState<number>(3);
@@ -31,8 +42,9 @@ export const SupportView: React.FC = () => {
     createSupportTicket({
       subject: ticketSubject,
       category: ticketCategory,
-      priority: 'MEDIUM',
-      messages: [{ sender: currentUser.name, timestamp: new Date().toISOString(), message: ticketMsg, isAgent: false }],
+      priority: ticketPriority,
+      userId: selectedRequester.id,
+      messages: [{ sender: selectedRequester.name, timestamp: new Date().toISOString(), message: ticketMsg, isAgent: false }],
     });
     setShowCreateTicketModal(false);
     setTicketSubject('');
@@ -88,7 +100,7 @@ export const SupportView: React.FC = () => {
               : 'bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-300'
           }`}
         >
-          Support Tickets ({supportTickets.length})
+          Support Tickets ({visibleTickets.length})
         </button>
         <button
           id="tab-support-chat"
@@ -128,22 +140,30 @@ export const SupportView: React.FC = () => {
               className="px-3 py-1.5 bg-[#002D72] hover:bg-blue-900 text-white text-xs font-bold rounded transition flex items-center space-x-1 cursor-pointer shadow-xs"
             >
               <Plus className="w-3.5 h-3.5" />
-              <span>Raise Support Ticket</span>
+              <span>{isAdmin ? 'Create Ticket on Behalf' : 'Raise Support Ticket'}</span>
             </button>
           </div>
 
           <div className="space-y-2.5">
-            {supportTickets.map((tkt) => (
+            {visibleTickets.map((tkt) => (
               <div key={tkt.id} id={`ticket-card-${tkt.id}`} data-testid={`ticket-card-${tkt.id}`} className="bg-white border border-slate-200 rounded-lg p-4 space-y-2.5 shadow-sm">
                 <div className="flex justify-between items-start">
                   <div>
                     <span className="text-[10px] font-extrabold text-[#002D72] uppercase tracking-wider">Ticket #{tkt.id}</span>
                     <h4 className="text-xs font-bold text-slate-900">{tkt.subject}</h4>
                   </div>
-                  <span className="px-2 py-0.5 bg-blue-50 text-[#002D72] rounded text-[10px] font-bold border border-blue-200">
+                  <span className={`px-2 py-0.5 rounded text-[10px] font-bold border ${
+                    tkt.status === 'OVERDUE' || tkt.status === 'ESCALATED'
+                      ? 'bg-red-50 text-red-800 border-red-200'
+                      : tkt.status === 'RESOLVED' || tkt.status === 'CLOSED'
+                        ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
+                        : 'bg-blue-50 text-[#002D72] border-blue-200'
+                  }`}>
                     {tkt.status}
                   </span>
                 </div>
+                {canManageTickets && <p className="text-[10px] text-slate-500">Requester: {tkt.messages[0]?.sender || 'Customer'}</p>}
+                <p className="text-[10px] text-slate-500">Last updated: {new Date(tkt.updatedAt).toLocaleString()}</p>
 
                 <div className="space-y-1.5 border-t border-slate-200 pt-2.5">
                   {tkt.messages.map((m, idx) => (
@@ -156,8 +176,41 @@ export const SupportView: React.FC = () => {
                     </div>
                   ))}
                 </div>
+                {canManageTickets && tkt.status !== 'RESOLVED' && tkt.status !== 'CLOSED' && (
+                  <div className="flex flex-wrap gap-2 border-t border-slate-200 pt-2">
+                    {tkt.status !== 'IN_PROGRESS' && (
+                      <button
+                        id={`btn-ticket-progress-${tkt.id}`}
+                        data-testid={`btn-ticket-progress-${tkt.id}`}
+                        onClick={() => updateSupportTicketStatus(tkt.id, 'IN_PROGRESS')}
+                        className="px-2.5 py-1 bg-amber-50 text-amber-900 border border-amber-300 rounded text-[10px] font-bold cursor-pointer"
+                      >
+                        Start Work
+                      </button>
+                    )}
+                    <button
+                      id={`btn-ticket-resolve-${tkt.id}`}
+                      data-testid={`btn-ticket-resolve-${tkt.id}`}
+                      onClick={() => updateSupportTicketStatus(tkt.id, 'RESOLVED')}
+                      className="px-2.5 py-1 bg-emerald-700 text-white border border-emerald-800 rounded text-[10px] font-bold cursor-pointer"
+                    >
+                      Resolve Ticket
+                    </button>
+                  </div>
+                )}
+                {canManageTickets && tkt.status === 'RESOLVED' && (
+                  <button
+                    id={`btn-ticket-close-${tkt.id}`}
+                    data-testid={`btn-ticket-close-${tkt.id}`}
+                    onClick={() => updateSupportTicketStatus(tkt.id, 'CLOSED')}
+                    className="px-2.5 py-1 bg-slate-100 text-slate-800 border border-slate-300 rounded text-[10px] font-bold cursor-pointer"
+                  >
+                    Close Ticket
+                  </button>
+                )}
               </div>
             ))}
+            {visibleTickets.length === 0 && <p className="text-xs text-slate-500">No tickets to display.</p>}
           </div>
         </div>
       )}
@@ -254,7 +307,24 @@ export const SupportView: React.FC = () => {
       {showCreateTicketModal && (
         <div id="modal-create-ticket" data-testid="modal-create-ticket" className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
           <form onSubmit={handleTicketSubmit} className="bg-white border border-slate-200 rounded-lg max-w-lg w-full p-5 shadow-xl space-y-3 text-slate-900">
-            <h3 className="text-sm font-bold text-slate-900">Raise New Support Ticket</h3>
+            <h3 className="text-sm font-bold text-slate-900">{isAdmin ? 'Create Ticket on Behalf of a User' : 'Raise New Support Ticket'}</h3>
+
+            {isAdmin && (
+              <div>
+                <label htmlFor="select-ticket-requester" className="block text-xs font-bold text-slate-700 mb-1">Requester</label>
+                <select
+                  id="select-ticket-requester"
+                  data-testid="select-ticket-requester"
+                  value={selectedRequesterId}
+                  onChange={(e) => setSelectedRequesterId(e.target.value)}
+                  className="w-full bg-slate-50 border border-slate-300 rounded p-1.5 text-xs text-slate-900"
+                >
+                  {Object.values(DEMO_PERSONAS).map((persona) => (
+                    <option key={persona.id} value={persona.id}>{persona.name} ({persona.role})</option>
+                  ))}
+                </select>
+              </div>
+            )}
 
             <div>
               <label className="block text-xs font-bold text-slate-700 mb-1">Subject</label>

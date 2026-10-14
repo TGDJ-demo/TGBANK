@@ -47,6 +47,8 @@ export const AdminPortalView: React.FC = () => {
               weakSecurityMode: false,
               heavyDomMode: false,
               brokenWorkflows: false,
+              loanRejectionScenario: 'NONE',
+              supportTicketChaosScenario: 'NONE',
             });
             addToast({ type: 'success', title: 'System Normal', message: 'All chaos defect flags reset to pristine enterprise mode.' });
           }}
@@ -399,6 +401,48 @@ export const AdminPortalView: React.FC = () => {
               </button>
             </div>
           </div>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <div id="card-flag-loan-rejection" data-testid="card-flag-loan-rejection" className="p-4 bg-white border border-slate-200 rounded-lg space-y-2.5 shadow-sm">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold text-red-800 uppercase">Loan Decision Chaos</span>
+            <AlertTriangle className="w-4 h-4 text-red-700" />
+          </div>
+          <p className="text-xs text-slate-600">Force a loan application to fail during document verification or credit scoring.</p>
+          <label htmlFor="select-loan-rejection-scenario" className="block text-[10px] font-bold text-slate-600">Rejection scenario</label>
+          <select
+            id="select-loan-rejection-scenario"
+            data-testid="select-loan-rejection-scenario"
+            value={featureFlags.loanRejectionScenario}
+            onChange={(e) => updateFeatureFlags({ loanRejectionScenario: e.target.value as typeof featureFlags.loanRejectionScenario })}
+            className="w-full bg-slate-50 border border-slate-300 rounded p-1.5 text-xs text-slate-900"
+          >
+            <option value="NONE">Disabled</option>
+            <option value="LOW_CREDIT_SCORE">Reject for low credit score</option>
+            <option value="DOCUMENT_FAILURE">Reject for document failure</option>
+          </select>
+        </div>
+
+        <div id="card-flag-support-ticket-chaos" data-testid="card-flag-support-ticket-chaos" className="p-4 bg-white border border-slate-200 rounded-lg space-y-2.5 shadow-sm">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold text-amber-800 uppercase">Support Ticket Chaos</span>
+            <Users className="w-4 h-4 text-amber-700" />
+          </div>
+          <p className="text-xs text-slate-600">Create tickets with overdue or escalated states to test support handling.</p>
+          <label htmlFor="select-support-ticket-chaos-scenario" className="block text-[10px] font-bold text-slate-600">Ticket scenario</label>
+          <select
+            id="select-support-ticket-chaos-scenario"
+            data-testid="select-support-ticket-chaos-scenario"
+            value={featureFlags.supportTicketChaosScenario}
+            onChange={(e) => updateFeatureFlags({ supportTicketChaosScenario: e.target.value as typeof featureFlags.supportTicketChaosScenario })}
+            className="w-full bg-slate-50 border border-slate-300 rounded p-1.5 text-xs text-slate-900"
+          >
+            <option value="NONE">Disabled</option>
+            <option value="OVERDUE">Create overdue ticket</option>
+            <option value="ESCALATED">Create critical escalated ticket</option>
+          </select>
         </div>
       </div>
 

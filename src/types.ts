@@ -118,7 +118,7 @@ export interface LoanApplication {
   purpose: string;
   annualIncome: number;
   status: 'SUBMITTED' | 'UNDER_REVIEW' | 'APPROVED' | 'REJECTED' | 'DISBURSED';
-  stage?: 'APPLICATION_RECEIVED' | 'OCR_VERIFIED' | 'CREDIT_SCORE_CHECKED' | 'UNDERWRITING_RISK_SCORED' | 'APPROVED' | 'DISBURSED' | 'REJECTED';
+  stage?: 'APPLICATION_RECEIVED' | 'DOCUMENT_OCR_VERIFIED' | 'CREDIT_SCORE_CHECKED' | 'UNDERWRITING_APPROVED' | 'APPROVED' | 'DISBURSED' | 'REJECTED';
   creditScoreAtApp?: number;
   dtiRatio?: number;
   disbursedToAccountId?: string;
@@ -165,10 +165,11 @@ export interface InvestmentAsset {
 
 export interface SupportTicket {
   id: string;
+  userId?: string;
   subject: string;
   category: 'ACCOUNT' | 'TRANSFER' | 'CARD' | 'LOAN' | 'SECURITY' | 'OTHER';
   priority: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
-  status: 'OPEN' | 'IN_PROGRESS' | 'RESOLVED' | 'CLOSED';
+  status: 'OPEN' | 'IN_PROGRESS' | 'RESOLVED' | 'CLOSED' | 'OVERDUE' | 'ESCALATED';
   createdAt: string;
   updatedAt: string;
   messages: { sender: string; timestamp: string; message: string; isAgent: boolean; attachments?: string[] }[];
@@ -200,6 +201,8 @@ export interface ChaosFeatureFlags {
   heavyDomMode: boolean; // Renders 5,000 extra hidden DOM elements
   // Workflow Defects
   brokenWorkflows: boolean; // Disables submit button randomly, broken step 2
+  loanRejectionScenario: 'NONE' | 'LOW_CREDIT_SCORE' | 'DOCUMENT_FAILURE';
+  supportTicketChaosScenario: 'NONE' | 'OVERDUE' | 'ESCALATED';
   // Advanced Chaos Engineering Suite
   packetJitterDrop: boolean; // Simulates network packet loss & retry drops
   sslCertWarning: boolean; // Simulates untrusted TLS/SSL certificate warning

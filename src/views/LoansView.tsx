@@ -1,10 +1,16 @@
 import React, { useState } from 'react';
 import { useBank } from '../context/BankContext';
+import { DEMO_PERSONAS } from '../mockData';
 import { Landmark, Calculator, Upload, CheckCircle2, Clock, XCircle, FileText, ChevronRight } from 'lucide-react';
 import { LoanApplication } from '../types';
 
 export const LoansView: React.FC = () => {
   const { loans, accounts, submitLoanApplication, currentUser, updateLoanStatus, advanceLoanStage, disburseLoan, addToast } = useBank();
+  const isAdmin = currentUser.role === 'ADMIN';
+  const isLoanOfficer = currentUser.role === 'LOAN_OFFICER';
+  const isLoanReviewer = isLoanOfficer || isAdmin;
+  const canApplyForLoan = ['CUSTOMER', 'PREMIUM_CUSTOMER', 'BUSINESS'].includes(currentUser.role) || isAdmin;
+  const visibleLoans = isLoanReviewer ? loans : loans.filter((loan) => loan.userId === currentUser.id);
 
   // Calculator State
   const [calcAmount, setCalcAmount] = useState<number>(25000);
@@ -13,6 +19,7 @@ export const LoansView: React.FC = () => {
 
   // Application Form State
   const [loanType, setLoanType] = useState<LoanApplication['loanType']>('PERSONAL');
+  const [selectedApplicantId, setSelectedApplicantId] = useState(isAdmin ? DEMO_PERSONAS.customer.id : currentUser.id);
   const [reqAmount, setReqAmount] = useState<string>('25000');
   const [termMonths, setTermMonths] = useState<string>('36');
   const [purpose, setPurpose] = useState<string>('Home renovation and energy efficiency upgrade');
@@ -69,6 +76,7 @@ export const LoansView: React.FC = () => {
         purpose,
         annualIncome: parseFloat(annualIncome),
         documents: uploadedFiles,
+        userId: isAdmin ? selectedApplicantId : currentUser.id,
       });
     } catch {
       return;
@@ -82,10 +90,10 @@ export const LoansView: React.FC = () => {
       {/* Header */}
       <div>
         <h1 id="heading-loans-title" data-testid="heading-loans-title" className="text-xl font-bold text-slate-900 tracking-tight">
-          Enterprise Loan & Credit Origination Center
+          {isLoanReviewer ? 'Loan Application Review & Underwriting' : 'Loans & Financing'}
         </h1>
         <p id="subheading-loans" data-testid="subheading-loans" className="text-xs text-slate-500 mt-0.5">
-          Simulate personal, home mortgage, car, and commercial loan applications with document verification.
+          {isLoanReviewer ? 'Review applications, verify documents, assess credit, and record lending decisions.' : 'Apply for financing and follow the status of your applications.'}
         </p>
       </div>
 
@@ -232,14 +240,30 @@ export const LoansView: React.FC = () => {
             </div>
           </div>
 
-          {/* New Application Form */}
+          {canApplyForLoan ? (
           <div id="form-loan-origination" data-testid="form-loan-origination" className="bg-white border border-slate-200 rounded-lg p-5 shadow-sm space-y-3">
             <h3 className="text-sm font-bold text-slate-900 flex items-center space-x-1.5">
               <Landmark className="w-4 h-4 text-[#002D72]" />
-              <span>Apply for TestGrid Demo Bank Financing</span>
+              <span>{isAdmin ? 'Create Application on Behalf of a User' : 'Apply for TestGrid Demo Bank Financing'}</span>
             </h3>
 
             <form onSubmit={handleLoanSubmit} className="space-y-3">
+              {isAdmin && (
+                <div>
+                  <label htmlFor="select-loan-applicant" className="block text-xs font-bold text-slate-700 mb-1">Applicant</label>
+                  <select
+                    id="select-loan-applicant"
+                    data-testid="select-loan-applicant"
+                    value={selectedApplicantId}
+                    onChange={(e) => setSelectedApplicantId(e.target.value)}
+                    className="w-full bg-slate-50 border border-slate-300 rounded p-1.5 text-xs text-slate-900"
+                  >
+                    {Object.values(DEMO_PERSONAS).map((persona) => (
+                      <option key={persona.id} value={persona.id}>{persona.name} ({persona.role})</option>
+                    ))}
+                  </select>
+                </div>
+              )}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-bold text-slate-700 mb-1">Loan Product Type</label>
@@ -490,21 +514,31 @@ export const LoansView: React.FC = () => {
                 disabled={isSubmitting}
                 className="w-full py-2.5 bg-[#002D72] hover:bg-blue-900 text-white font-bold text-xs rounded transition cursor-pointer shadow-sm"
               >
-                {isSubmitting ? 'Submitting Application...' : 'Submit Financing Application for Underwriting'}
+                {isSubmitting ? 'Submitting Application...' : isAdmin ? 'Submit Application on Behalf' : 'Submit Financing Application'}
               </button>
             </form>
           </div>
+            ) : (
+              <div id="loan-role-notice" data-testid="loan-role-notice" className="bg-white border border-slate-200 rounded-lg p-5 shadow-sm">
+                <h3 className="text-sm font-bold text-slate-900">{isLoanOfficer ? 'Application Review Queue' : 'Customer Applications Only'}</h3>
+                <p className="text-xs text-slate-600 mt-1">
+                  {isLoanReviewer
+                    ? 'Loan officers review and decide on customer applications; they cannot submit applications.'
+                    : 'Loan applications are available to customer accounts. You can review any applications you submitted here.'}
+                </p>
+              </div>
+            )}
         </div>
 
         {/* Loan Application Status Tracker Sidebar (1 Col) */}
         <div className="space-y-3">
           <h3 className="text-xs font-bold text-slate-900 flex items-center space-x-1.5">
             <Clock className="w-4 h-4 text-amber-700" />
-            <span>Submitted Applications Tracker ({loans.length})</span>
+            <span>{isLoanReviewer ? 'Application Review Queue' : 'My Applications'} ({visibleLoans.length})</span>
           </h3>
 
           <div className="space-y-2.5">
-            {loans.map((app) => (
+            {visibleLoans.map((app) => (
               <div
                 key={app.id}
                 id={`loan-status-card-${app.id}`}
@@ -547,9 +581,9 @@ export const LoansView: React.FC = () => {
                   </div>
 
                   {/* Advance Stage Buttons for Loan Officers & Admins */}
-                  {(currentUser.role === 'LOAN_OFFICER' || currentUser.role === 'ADMIN' || currentUser.role === 'CUSTOMER') && (
+                  {isLoanReviewer && (
                     <div className="space-y-1.5 pt-1">
-                      {(!app.stage || app.stage === 'APPLICATION_RECEIVED') && (
+                      {['SUBMITTED', 'UNDER_REVIEW'].includes(app.status) && (!app.stage || app.stage === 'APPLICATION_RECEIVED') && (
                         <button
                           id={`btn-ocr-verify-${app.id}`}
                           data-testid={`btn-ocr-verify-${app.id}`}
@@ -625,7 +659,7 @@ export const LoansView: React.FC = () => {
                 </div>
 
                 {/* Loan Officer Controls (if user is LOAN_OFFICER or ADMIN) */}
-                {(currentUser.role === 'LOAN_OFFICER' || currentUser.role === 'ADMIN') && app.status === 'UNDER_REVIEW' && (
+                {isLoanReviewer && app.status === 'UNDER_REVIEW' && (
                   <div className="flex space-x-2 pt-1">
                     <button
                       id={`btn-approve-loan-${app.id}`}

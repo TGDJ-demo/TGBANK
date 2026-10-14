@@ -1012,6 +1012,10 @@ export const PERSONA_DATASETS: Record<string, {
   },
 };
 
+export const ALL_DEMO_LOANS: LoanApplication[] = Object.values(PERSONA_DATASETS)
+  .flatMap((dataset) => dataset.loans)
+  .filter((loan, index, loans) => loans.findIndex((candidate) => candidate.id === loan.id) === index);
+
 export const DEFAULT_NOTIFICATIONS: NotificationItem[] = [
   {
     id: 'notif_101',
@@ -1049,6 +1053,8 @@ export const DEFAULT_CHAOS_FLAGS: ChaosFeatureFlags = {
   weakSecurityMode: false,
   heavyDomMode: false,
   brokenWorkflows: false,
+  loanRejectionScenario: 'NONE',
+  supportTicketChaosScenario: 'NONE',
   packetJitterDrop: false,
   sslCertWarning: false,
   staleCsrfToken: false,

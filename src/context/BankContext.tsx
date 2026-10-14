@@ -20,7 +20,7 @@ import {
   DEFAULT_ACCOUNTS,
   DEFAULT_BENEFICIARIES,
   DEFAULT_BILLS,
-  DEFAULT_LOANS,
+  ALL_DEMO_LOANS,
   DEFAULT_CREDIT_CARDS,
   DEFAULT_INVESTMENTS,
   DEFAULT_NOTIFICATIONS,
@@ -71,6 +71,7 @@ interface BankContextType {
   toggleFreezeCreditCard: (cardId: string) => void;
   addBeneficiary: (ben: Omit<Beneficiary, 'id'>) => void;
   createSupportTicket: (ticket: Partial<SupportTicket>) => void;
+  updateSupportTicketStatus: (ticketId: string, status: Extract<SupportTicket['status'], 'IN_PROGRESS' | 'RESOLVED' | 'CLOSED'>) => void;
   updateLoanStatus: (loanId: string, status: LoanApplication['status'], notes?: string) => Promise<void>;
   advanceLoanStage: (loanId: string, nextStage: LoanApplication['stage'], notes?: string) => Promise<void>;
   disburseLoan: (loanId: string, targetAccountId: string) => Promise<void>;
@@ -140,13 +141,14 @@ export const BankProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [transactions, setTransactions] = useState<Transaction[]>(generateSeedTransactions(120));
   const [beneficiaries, setBeneficiaries] = useState<Beneficiary[]>(DEFAULT_BENEFICIARIES);
   const [bills, setBills] = useState<BillPayment[]>(DEFAULT_BILLS);
-  const [loans, setLoans] = useState<LoanApplication[]>(DEFAULT_LOANS);
+  const [loans, setLoans] = useState<LoanApplication[]>(ALL_DEMO_LOANS);
   const [creditCards, setCreditCards] = useState<CreditCardDetails[]>(DEFAULT_CREDIT_CARDS);
   const [investments, setInvestments] = useState<InvestmentAsset[]>(DEFAULT_INVESTMENTS);
   const [notifications, setNotifications] = useState<NotificationItem[]>(DEFAULT_NOTIFICATIONS);
   const [supportTickets, setSupportTickets] = useState<SupportTicket[]>([
     {
       id: 'tkt_801',
+      userId: 'usr_cust_101',
       subject: 'Inquiry regarding Wire Transfer limits for Escrow',
       category: 'TRANSFER',
       priority: 'MEDIUM',
@@ -179,7 +181,6 @@ export const BankProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (ds) {
       setAccounts(ds.accounts);
       setTransactions(ds.transactions);
-      setLoans(ds.loans);
       setCreditCards(ds.cards);
       setInvestments(ds.investments);
       setBeneficiaries(ds.beneficiaries);
@@ -541,16 +542,25 @@ export const BankProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const submitLoanApplication = async (loanData: Partial<LoanApplication>): Promise<LoanApplication> => {
+    const isAdmin = currentUser.role === 'ADMIN';
+    if (!isAdmin && !['CUSTOMER', 'PREMIUM_CUSTOMER', 'BUSINESS'].includes(currentUser.role)) {
+      addToast({ type: 'error', title: 'Application Not Allowed', message: 'Only customer accounts or admins acting on their behalf can submit loan applications.' });
+      throw new Error('Loan application submission is not allowed for this account.');
+    }
+    const applicant = isAdmin
+      ? Object.values(DEMO_PERSONAS).find((persona) => persona.id === loanData.userId)
+      : currentUser;
+    if (!applicant) throw new Error('Select a valid applicant before submitting the loan application.');
     await simulateDelay();
     await requestDemoApi('/api/loans/apply', {
       ...loanData,
-      applicantName: currentUser.name,
-      userId: currentUser.id,
+      applicantName: applicant.name,
+      userId: applicant.id,
     });
     const newLoan: LoanApplication = {
       id: `loan_app_${Date.now()}`,
-      userId: currentUser.id,
-      applicantName: currentUser.name,
+      userId: applicant.id,
+      applicantName: applicant.name,
       loanType: loanData.loanType || 'PERSONAL',
       requestedAmount: loanData.requestedAmount || 10000,
       termMonths: loanData.termMonths || 36,
@@ -570,13 +580,19 @@ export const BankProvider: React.FC<{ children: React.ReactNode }> = ({ children
     addToast({
       type: 'success',
       title: 'Loan Application Submitted',
-      message: `Loan App ID ${newLoan.id} submitted for underwriting review.`,
+      message: isAdmin
+        ? `Loan App ID ${newLoan.id} submitted for ${applicant.name}.`
+        : `Loan App ID ${newLoan.id} submitted for underwriting review.`,
     });
 
     return newLoan;
   };
 
   const updateLoanStatus = async (loanId: string, status: LoanApplication['status'], notes?: string) => {
+    if (!['LOAN_OFFICER', 'ADMIN'].includes(currentUser.role) || !['APPROVED', 'REJECTED'].includes(status)) {
+      addToast({ type: 'error', title: 'Loan Decision Not Allowed', message: 'Only loan officers or admins can approve or reject loan applications.' });
+      return;
+    }
     const loan = loans.find((item) => item.id === loanId);
     if (!loan) return;
     try {
@@ -627,17 +643,26 @@ export const BankProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const createSupportTicket = (ticket: Partial<SupportTicket>) => {
+    const requester = currentUser.role === 'ADMIN'
+      ? Object.values(DEMO_PERSONAS).find((persona) => persona.id === ticket.userId) || currentUser
+      : currentUser;
+    const now = new Date();
+    const chaosScenario = featureFlags.supportTicketChaosScenario;
+    const createdAt = chaosScenario === 'OVERDUE'
+      ? new Date(now.getTime() - 48 * 60 * 60 * 1000).toISOString()
+      : now.toISOString();
     const newTkt: SupportTicket = {
       id: `tkt_${Date.now()}`,
+      userId: requester.id,
       subject: ticket.subject || 'Support Inquiry',
       category: ticket.category || 'ACCOUNT',
-      priority: ticket.priority || 'MEDIUM',
-      status: 'OPEN',
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
+      priority: chaosScenario === 'ESCALATED' ? 'CRITICAL' : ticket.priority || 'MEDIUM',
+      status: chaosScenario === 'OVERDUE' ? 'OVERDUE' : chaosScenario === 'ESCALATED' ? 'ESCALATED' : 'OPEN',
+      createdAt,
+      updatedAt: createdAt,
       messages: [
         {
-          sender: currentUser.name,
+          sender: ticket.messages?.[0]?.sender || requester.name,
           timestamp: new Date().toISOString(),
           message: ticket.messages?.[0]?.message || 'Please assist with my request.',
           isAgent: false,
@@ -651,6 +676,29 @@ export const BankProvider: React.FC<{ children: React.ReactNode }> = ({ children
       title: 'Ticket Created',
       message: `Support ticket #${newTkt.id} submitted successfully.`,
     });
+  };
+
+  const updateSupportTicketStatus = (ticketId: string, status: Extract<SupportTicket['status'], 'IN_PROGRESS' | 'RESOLVED' | 'CLOSED'>) => {
+    if (!['SUPPORT', 'ADMIN'].includes(currentUser.role)) {
+      addToast({ type: 'error', title: 'Ticket Update Not Allowed', message: 'Only support team members or admins can update ticket status.' });
+      return;
+    }
+    const timestamp = new Date().toISOString();
+    setSupportTickets((prev) => prev.map((ticket) => {
+      if (ticket.id !== ticketId) return ticket;
+      return {
+        ...ticket,
+        status,
+        updatedAt: timestamp,
+        messages: [...ticket.messages, {
+          sender: currentUser.name,
+          timestamp,
+          message: `Ticket status changed to ${status.replace('_', ' ').toLowerCase()}.`,
+          isAgent: true,
+        }],
+      };
+    }));
+    addToast({ type: 'success', title: 'Ticket Updated', message: `Ticket #${ticketId} is now ${status.toLowerCase().replace('_', ' ')}.` });
   };
 
   const markAllNotificationsRead = () => {
@@ -730,33 +778,54 @@ export const BankProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const advanceLoanStage = async (loanId: string, nextStage: LoanApplication['stage'], notes?: string) => {
+    if (!['LOAN_OFFICER', 'ADMIN'].includes(currentUser.role)) {
+      addToast({ type: 'error', title: 'Loan Review Not Allowed', message: 'Only loan officers or admins can move applications through underwriting.' });
+      return;
+    }
+    const rejectionReason =
+      (nextStage === 'DOCUMENT_OCR_VERIFIED' && featureFlags.loanRejectionScenario === 'DOCUMENT_FAILURE')
+        ? 'Application rejected: submitted documents failed verification.'
+        : (nextStage === 'CREDIT_SCORE_CHECKED' && featureFlags.loanRejectionScenario === 'LOW_CREDIT_SCORE')
+          ? 'Application rejected: credit score is below the lending threshold.'
+          : undefined;
+    const effectiveStage = rejectionReason ? 'REJECTED' : nextStage;
+    const effectiveNotes = rejectionReason || notes;
     try {
-      await requestDemoApi('/api/loans/stage', { loanId, nextStage, notes });
+      await requestDemoApi('/api/loans/stage', {
+        loanId,
+        nextStage: effectiveStage,
+        status: rejectionReason ? 'REJECTED' : undefined,
+        notes: effectiveNotes,
+      });
     } catch {
       return;
     }
     setLoans((prev) =>
       prev.map((l) => {
         if (l.id === loanId) {
-          const updatedStatus = nextStage === 'APPROVED' ? 'APPROVED' : nextStage === 'DISBURSED' ? 'DISBURSED' : nextStage === 'REJECTED' ? 'REJECTED' : 'UNDER_REVIEW';
+          const updatedStatus = rejectionReason ? 'REJECTED' : nextStage === 'APPROVED' ? 'APPROVED' : nextStage === 'DISBURSED' ? 'DISBURSED' : nextStage === 'REJECTED' ? 'REJECTED' : 'UNDER_REVIEW';
           return {
             ...l,
-            stage: nextStage,
+            stage: effectiveStage,
             status: updatedStatus,
-            reviewerNotes: notes || l.reviewerNotes,
+            reviewerNotes: effectiveNotes || l.reviewerNotes,
           };
         }
         return l;
       })
     );
     addToast({
-      type: 'success',
-      title: 'Loan Processing Advanced',
-      message: `Application moved to stage: ${nextStage}`,
+      type: rejectionReason ? 'warning' : 'success',
+      title: rejectionReason ? 'Loan Application Rejected' : 'Loan Processing Advanced',
+      message: rejectionReason || `Application moved to stage: ${nextStage}`,
     });
   };
 
   const disburseLoan = async (loanId: string, targetAccountId: string): Promise<void> => {
+    if (!['LOAN_OFFICER', 'ADMIN'].includes(currentUser.role)) {
+      addToast({ type: 'error', title: 'Loan Disbursement Not Allowed', message: 'Only loan officers or admins can disburse approved loans.' });
+      return;
+    }
     const loan = loans.find((l) => l.id === loanId);
     if (!loan) return;
 
@@ -937,7 +1006,7 @@ export const BankProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setTransactions(generateSeedTransactions(120));
     setBeneficiaries(DEFAULT_BENEFICIARIES);
     setBills(DEFAULT_BILLS);
-    setLoans(DEFAULT_LOANS);
+    setLoans(ALL_DEMO_LOANS);
     addToast({ type: 'info', title: 'Data Reset', message: 'Restored system to initial enterprise seed dataset.' });
   };
 
@@ -974,6 +1043,7 @@ export const BankProvider: React.FC<{ children: React.ReactNode }> = ({ children
         toggleFreezeCreditCard,
         addBeneficiary,
         createSupportTicket,
+        updateSupportTicketStatus,
         updateLoanStatus,
         advanceLoanStage,
         disburseLoan,
