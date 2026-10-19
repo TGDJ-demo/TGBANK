@@ -29,9 +29,9 @@ export const LoginPage: React.FC = () => {
   const [selectedPersonaKey, setSelectedPersonaKey] = useState<string>('customer');
 
   // Selenium-compatible Checkbox states (explicit boolean)
-  const [rememberMe, setRememberMe] = useState<boolean>(true);
-  const [captchaChecked, setCaptchaChecked] = useState<boolean>(true);
-  const [termsAgreed, setTermsAgreed] = useState<boolean>(true);
+  const [rememberMe, setRememberMe] = useState<boolean>(false);
+  const [captchaChecked, setCaptchaChecked] = useState<boolean>(false);
+  const [termsAgreed, setTermsAgreed] = useState<boolean>(false);
   const [requireMfa, setRequireMfa] = useState<boolean>(false);
 
   // Flow states
