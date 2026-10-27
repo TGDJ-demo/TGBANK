@@ -412,20 +412,7 @@ export const LoansView: React.FC = () => {
                   Required Proof of Income Documents (W2 / Tax Return)
                 </label>
                 <div id="dropzone-document-upload" data-testid="dropzone-document-upload">
-                  <MockDocumentUpload inputId="input-file-document-upload" prompt="Choose or scan proof-of-income documents" detail="PDF or PNG · OCR verification demo" accept=".pdf,.png,.txt,text/plain" onFilesAdded={handleFileUpload} />
-                </div>
-
-                {/* Uploaded Files List */}
-                <div className="mt-2 space-y-1">
-                  {uploadedFiles.map((doc, idx) => (
-                    <div key={idx} className="flex items-center justify-between p-1.5 bg-slate-100 rounded border border-slate-200 text-xs text-slate-800 font-mono">
-                      <div className="flex items-center space-x-1.5">
-                        <FileText className="w-3.5 h-3.5 text-[#002D72]" />
-                        <span>{doc.name}</span>
-                      </div>
-                      <span className="text-[10px] text-slate-500">{doc.size}</span>
-                    </div>
-                  ))}
+                  <MockDocumentUpload inputId="input-file-document-upload" prompt="Choose or scan proof-of-income documents" detail="PDF or PNG · OCR verification demo" accept=".pdf,.png,.txt,text/plain" attachedFiles={uploadedFiles} onRemoveFile={(index) => setUploadedFiles((current) => current.filter((_, fileIndex) => fileIndex !== index))} onFilesAdded={handleFileUpload} />
                 </div>
               </div>
 

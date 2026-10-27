@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useBank } from '../context/BankContext';
-import { UserCheck, ShieldCheck, Save, CheckCircle2, Lock, FileCheck } from 'lucide-react';
+import { UserCheck, ShieldCheck, Save, CheckCircle2, Lock, FileCheck, X } from 'lucide-react';
 import { MockDocumentUpload } from '../components/MockDocumentUpload';
 
 export const CustomerProfileView: React.FC = () => {
@@ -257,9 +257,10 @@ export const CustomerProfileView: React.FC = () => {
                     <p className="text-slate-900 font-bold truncate">{doc.name}</p>
                     <p className="text-[10px] text-slate-500">{doc.date}</p>
                   </div>
-                  <span className="text-[10px] font-bold text-emerald-800 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">
-                    {doc.status}
-                  </span>
+                  <div className="flex shrink-0 items-center gap-1.5">
+                    <span className="text-[10px] font-bold text-emerald-800 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">{doc.status}</span>
+                    <button type="button" aria-label={`Remove ${doc.name}`} title={`Remove ${doc.name}`} onClick={() => setKycDocs((current) => current.filter((_, index) => index !== i))} className="grid h-7 w-7 place-items-center text-slate-500 hover:bg-rose-50 hover:text-rose-700"><X className="h-3.5 w-3.5" /></button>
+                  </div>
                 </div>
               ))}
             </div>

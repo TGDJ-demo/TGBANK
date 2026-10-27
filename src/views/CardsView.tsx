@@ -770,8 +770,7 @@ export const CardsView: React.FC = () => {
                   <p className="text-xs font-bold text-slate-700">Supporting identity or income evidence <span className="font-normal text-slate-500">(optional)</span></p>
                   <p className="mt-0.5 text-[10px] text-slate-500">Attach a document for this credit-limit request.</p>
                 </div>
-                <MockDocumentUpload inputId="input-card-limit-evidence" prompt="Choose supporting files" detail="PDF, JPG or PNG" onFilesAdded={handleLimitEvidence} />
-                {limitEvidence.map((document, index) => <div key={`${document.name}-${index}`} className="flex items-center gap-2 text-[10px] text-slate-600"><FileText className="h-3.5 w-3.5 text-teal-700" /><span className="truncate">{document.name}</span><span className="ml-auto shrink-0">{document.size}</span></div>)}
+                <MockDocumentUpload inputId="input-card-limit-evidence" prompt="Choose supporting files" detail="PDF, JPG or PNG" attachedFiles={limitEvidence} onRemoveFile={(index) => setLimitEvidence((current) => current.filter((_, fileIndex) => fileIndex !== index))} onFilesAdded={handleLimitEvidence} />
               </div>
 
             <div className="flex space-x-2 pt-1">

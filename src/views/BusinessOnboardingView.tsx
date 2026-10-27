@@ -420,21 +420,20 @@ export const BusinessOnboardingView: React.FC = () => {
                             <div className="flex flex-wrap items-center justify-between gap-2">
                               <div>
                                 <p className="text-xs font-semibold text-slate-800">Biometric identity check</p>
-                                <p className="mt-0.5 text-[10px] text-slate-500">Demo only. No camera or biometric data is accessed.</p>
+                                <p className="mt-0.5 text-[10px] text-slate-500">Enter their name, then verify the demo identity. No camera or biometric data is accessed.</p>
                               </div>
                               <button type="button" disabled={!party.name.trim()} onClick={() => runMockBiometricCheck(index)} className="border border-slate-300 px-2.5 py-1.5 text-[10px] font-semibold text-slate-700 hover:border-teal-700 hover:text-teal-800 disabled:cursor-not-allowed disabled:opacity-50">
-                                {party.biometricStatus === 'VERIFIED_MOCK' ? 'Run again' : 'Run mock check'}
+                                {!party.name.trim() ? 'Enter name first' : party.biometricStatus === 'VERIFIED_MOCK' ? 'Run again' : 'Verify demo identity'}
                               </button>
                             </div>
                             <div className={`flex items-center justify-between gap-2 px-3 py-2 text-[10px] ${party.biometricStatus === 'VERIFIED_MOCK' ? 'bg-emerald-50 text-emerald-800' : 'bg-slate-50 text-slate-600'}`}>
-                              <span>{party.biometricStatus === 'VERIFIED_MOCK' ? 'Mock verified' : 'Not verified'}</span>
+                              <span>{party.biometricStatus === 'VERIFIED_MOCK' ? 'Demo verified' : party.name.trim() ? 'Ready to verify' : 'Needs name'}</span>
                               {party.biometricReference && <span className="font-mono">{party.biometricReference}</span>}
                             </div>
                           </div>
                           <div>
                             <p className="mb-2 text-xs font-semibold text-slate-800">Identity verification evidence</p>
-                            <MockDocumentUpload inputId={`business-party-${index}-identity-upload`} prompt="Choose identity files or scan" detail="PDF, JPG or PNG · multiple files accepted" onFilesAdded={(files) => handlePartyDocuments(index, files)} />
-                            {party.identityDocuments.length > 0 && <ul className="mt-2 space-y-1">{party.identityDocuments.map((document, documentIndex) => <li key={`${document.name}-${documentIndex}`} className="flex items-center gap-2 text-[10px] text-slate-600"><FileText className="h-3.5 w-3.5 shrink-0 text-teal-700" /><span className="min-w-0 truncate">{document.name}</span><span className="ml-auto shrink-0">{document.size}</span></li>)}</ul>}
+                            <MockDocumentUpload inputId={`business-party-${index}-identity-upload`} prompt="Choose identity files or scan" detail="PDF, JPG or PNG · multiple files accepted" attachedFiles={party.identityDocuments} onRemoveFile={(documentIndex) => setParties((current) => current.map((person, partyIndex) => partyIndex === index ? { ...person, identityDocuments: person.identityDocuments.filter((_, fileIndex) => fileIndex !== documentIndex) } : person))} onFilesAdded={(files) => handlePartyDocuments(index, files)} />
                           </div>
                         </div>
                       </div>

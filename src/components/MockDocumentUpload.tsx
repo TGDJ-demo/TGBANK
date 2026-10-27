@@ -1,11 +1,19 @@
 import React, { useState } from 'react';
-import { FileText, Upload } from 'lucide-react';
+import { FileText, Upload, X } from 'lucide-react';
+
+interface AttachedUpload {
+  name: string;
+  size?: string;
+  status?: string;
+}
 
 interface MockDocumentUploadProps {
   inputId: string;
   prompt: string;
   detail: string;
   accept?: string;
+  attachedFiles?: AttachedUpload[];
+  onRemoveFile?: (index: number) => void;
   onFilesAdded: (files: File[]) => void;
 }
 
@@ -14,6 +22,8 @@ export const MockDocumentUpload: React.FC<MockDocumentUploadProps> = ({
   prompt,
   detail,
   accept = '.pdf,.jpg,.jpeg,.png,.txt,text/plain',
+  attachedFiles = [],
+  onRemoveFile,
   onFilesAdded,
 }) => {
   const [sampleError, setSampleError] = useState('');
@@ -51,6 +61,19 @@ export const MockDocumentUpload: React.FC<MockDocumentUploadProps> = ({
           <button type="button" onClick={handleSampleEvidence} className="border border-slate-300 bg-white px-2.5 py-1.5 text-[10px] font-semibold text-slate-700 hover:border-[#002D72] hover:text-[#002D72]">Attach demo file</button>
         </div>
       </div>
+      {attachedFiles.length > 0 && (
+        <ul className="divide-y divide-slate-100 border border-slate-200 bg-white">
+          {attachedFiles.map((file, index) => (
+            <li key={`${file.name}-${index}`} className="flex min-w-0 items-center gap-2 px-3 py-2">
+              <FileText className="h-3.5 w-3.5 shrink-0 text-teal-700" />
+              <span className="min-w-0 flex-1 truncate text-[10px] font-medium text-slate-700">{file.name}</span>
+              {file.size && <span className="shrink-0 text-[10px] text-slate-500">{file.size}</span>}
+              {file.status && <span className="shrink-0 text-[10px] text-slate-500">{file.status}</span>}
+              {onRemoveFile && <button type="button" title={`Remove ${file.name}`} aria-label={`Remove ${file.name}`} onClick={() => onRemoveFile(index)} className="grid h-7 w-7 shrink-0 place-items-center text-slate-500 hover:bg-rose-50 hover:text-rose-700"><X className="h-3.5 w-3.5" /></button>}
+            </li>
+          ))}
+        </ul>
+      )}
       {sampleError && <p role="alert" className="text-[10px] text-rose-700">{sampleError}</p>}
     </div>
   );
