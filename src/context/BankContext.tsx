@@ -105,6 +105,7 @@ const VALID_VIEWS = [
   'support',
   'admin',
   'swagger',
+  'business-onboarding',
 ] as const;
 
 const readPersistedSession = (): { personaKey: string; activeView: string } | null => {

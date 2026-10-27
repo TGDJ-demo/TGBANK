@@ -60,14 +60,14 @@ export const Header: React.FC<{ onToggleSidebar?: () => void; onOpenTestDataModa
             <span
               id="brand-title-text"
               data-testid="brand-title-text"
-              className="text-lg font-bold tracking-tight text-white font-sans"
+              className="whitespace-nowrap text-lg font-bold tracking-tight text-white font-sans"
             >
               BANK OF TESTGRID
             </span>
             <span
               id="brand-subtitle-badge"
               data-testid="brand-subtitle-badge"
-              className="text-[10px] font-bold px-2 py-0.5 bg-blue-900/80 text-blue-100 rounded border border-blue-400/30 uppercase tracking-wider"
+              className="hidden text-[10px] font-bold px-2 py-0.5 bg-blue-900/80 text-blue-100 rounded border border-blue-400/30 uppercase tracking-wider sm:inline-flex"
             >
               Private Client
             </span>
@@ -104,7 +104,7 @@ export const Header: React.FC<{ onToggleSidebar?: () => void; onOpenTestDataModa
               name="test-data-injector"
               aria-label={hasA11yDefects ? undefined : 'Open Test Data Injector'}
               onClick={onOpenTestDataModal}
-              className="flex items-center space-x-1.5 px-2.5 py-1 bg-amber-500/20 hover:bg-amber-500/30 text-amber-200 border border-amber-400/40 rounded text-xs font-bold transition cursor-pointer"
+              className="hidden items-center space-x-1.5 px-2.5 py-1 bg-amber-500/20 hover:bg-amber-500/30 text-amber-200 border border-amber-400/40 rounded text-xs font-bold transition cursor-pointer sm:flex"
             >
               <Database className="w-3.5 h-3.5 text-amber-300" />
               <span className="hidden sm:inline">Inject Test Data</span>
@@ -118,7 +118,7 @@ export const Header: React.FC<{ onToggleSidebar?: () => void; onOpenTestDataModa
             name="swagger-quick-link"
             aria-label={hasA11yDefects ? undefined : 'Open OpenAPI Swagger API Explorer'}
             onClick={() => setActiveView('swagger')}
-            className="flex items-center space-x-1.5 px-2.5 py-1 bg-white/10 hover:bg-white/20 text-white border border-white/20 rounded text-xs font-medium transition cursor-pointer"
+            className="hidden items-center space-x-1.5 px-2.5 py-1 bg-white/10 hover:bg-white/20 text-white border border-white/20 rounded text-xs font-medium transition cursor-pointer sm:flex"
           >
             <Code2 className="w-3.5 h-3.5 text-emerald-300" />
             <span className="hidden md:inline">REST APIs</span>

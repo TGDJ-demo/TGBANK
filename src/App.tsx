@@ -18,6 +18,7 @@ import { CustomerProfileView } from './views/CustomerProfileView';
 import { SupportView } from './views/SupportView';
 import { AdminPortalView } from './views/AdminPortalView';
 import { ApiSwaggerView } from './views/ApiSwaggerView';
+import { BusinessOnboardingView } from './views/BusinessOnboardingView';
 
 const MainAppContent: React.FC = () => {
   const { activeView, isAuthenticated, featureFlags, login } = useBank();
@@ -102,6 +103,8 @@ const MainAppContent: React.FC = () => {
         return <AdminPortalView />;
       case 'swagger':
         return <ApiSwaggerView />;
+      case 'business-onboarding':
+        return <BusinessOnboardingView />;
       default:
         return <DashboardView />;
     }
