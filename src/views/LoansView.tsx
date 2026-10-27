@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { useBank } from '../context/BankContext';
 import { DEMO_PERSONAS } from '../mockData';
-import { Landmark, Calculator, Upload, CheckCircle2, Clock, XCircle, FileText, ChevronRight } from 'lucide-react';
+import { Landmark, Calculator, CheckCircle2, Clock, XCircle, FileText, ChevronRight } from 'lucide-react';
 import { LoanApplication } from '../types';
+import { MockDocumentUpload } from '../components/MockDocumentUpload';
 
 export const LoansView: React.FC = () => {
   const { loans, accounts, submitLoanApplication, currentUser, updateLoanStatus, advanceLoanStage, disburseLoan, addToast } = useBank();
@@ -42,21 +43,15 @@ export const LoansView: React.FC = () => {
 
   const currentEmi = calculateEmi(calcAmount, calcTermMonths, calcInterestRate);
 
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (files && files.length > 0) {
-      const file = files[0];
-      setUploadedFiles((prev) => [
-        ...prev,
-        {
-          name: file.name,
-          size: `${(file.size / 1024).toFixed(0)} KB`,
-          type: file.type || 'document/pdf',
-          uploadedAt: new Date().toISOString().split('T')[0],
-        },
-      ]);
-      addToast({ type: 'info', title: 'Document Uploaded', message: `Uploaded ${file.name} to loan verification store.` });
-    }
+  const handleFileUpload = (files: File[]) => {
+    const uploaded = files.map((file) => ({
+      name: file.name,
+      size: `${Math.max(1, Math.round(file.size / 1024))} KB`,
+      type: file.type || 'document/pdf',
+      uploadedAt: new Date().toISOString().split('T')[0],
+    }));
+    setUploadedFiles((previous) => [...previous, ...uploaded]);
+    if (uploaded.length) addToast({ type: 'info', title: 'Document Uploaded', message: `${uploaded.length} document(s) added to loan verification.` });
   };
 
   const handleLoanSubmit = async (e: React.FormEvent) => {
@@ -416,17 +411,8 @@ export const LoansView: React.FC = () => {
                 <label className="block text-xs font-bold text-slate-700 mb-1">
                   Required Proof of Income Documents (W2 / Tax Return)
                 </label>
-                <div id="dropzone-document-upload" data-testid="dropzone-document-upload" className="p-3 border-2 border-dashed border-slate-300 hover:border-[#002D72] bg-slate-50 rounded text-center cursor-pointer transition">
-                  <Upload className="w-5 h-5 text-[#002D72] mx-auto mb-1" />
-                  <p className="text-xs text-slate-800 font-bold">Click or Drag PDF/PNG proof documents to upload</p>
-                  <p className="text-[10px] text-slate-500 mt-0.5">Automated OCR verification active</p>
-                  <input
-                    id="input-file-document-upload"
-                    data-testid="input-file-document-upload"
-                    type="file"
-                    onChange={handleFileUpload}
-                    className="hidden"
-                  />
+                <div id="dropzone-document-upload" data-testid="dropzone-document-upload">
+                  <MockDocumentUpload inputId="input-file-document-upload" prompt="Choose or scan proof-of-income documents" detail="PDF or PNG · OCR verification demo" accept=".pdf,.png,.txt,text/plain" onFilesAdded={handleFileUpload} />
                 </div>
 
                 {/* Uploaded Files List */}

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useBank } from '../context/BankContext';
-import { UserCheck, ShieldCheck, Upload, Save, CheckCircle2, Lock, FileCheck } from 'lucide-react';
+import { UserCheck, ShieldCheck, Save, CheckCircle2, Lock, FileCheck } from 'lucide-react';
+import { MockDocumentUpload } from '../components/MockDocumentUpload';
 
 export const CustomerProfileView: React.FC = () => {
   const { currentUser, addToast } = useBank();
@@ -39,21 +40,18 @@ export const CustomerProfileView: React.FC = () => {
     }, 500);
   };
 
-  const handleKycUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (files && files.length > 0) {
-      setKycDocs((prev) => [
-        ...prev,
-        {
-          name: files[0].name,
-          date: new Date().toISOString().split('T')[0],
-          status: 'PENDING_REVIEW',
-        },
-      ]);
+  const handleKycUpload = (files: File[]) => {
+    const today = new Date().toISOString().split('T')[0];
+    setKycDocs((previous) => [...previous, ...files.map((file) => ({
+      name: file.name,
+      date: today,
+      status: 'PENDING_REVIEW',
+    }))]);
+    if (files.length) {
       addToast({
         type: 'info',
         title: 'KYC Document Received',
-        message: 'Document submitted for compliance review.',
+        message: `${files.length} document(s) submitted for compliance review.`,
       });
     }
   };
@@ -248,10 +246,8 @@ export const CustomerProfileView: React.FC = () => {
               <span>Identity KYC Verification Documents</span>
             </h3>
 
-            <div id="dropzone-kyc-upload" data-testid="dropzone-kyc-upload" className="p-3 border-2 border-dashed border-slate-300 hover:border-[#002D72] bg-slate-50 rounded text-center cursor-pointer transition">
-              <Upload className="w-5 h-5 text-[#002D72] mx-auto mb-1" />
-              <p className="text-xs text-slate-800 font-bold">Upload Government Photo ID / Passport</p>
-              <input id="input-kyc-upload" data-testid="input-kyc-upload" type="file" onChange={handleKycUpload} className="hidden" />
+            <div id="dropzone-kyc-upload" data-testid="dropzone-kyc-upload">
+              <MockDocumentUpload inputId="input-kyc-upload" prompt="Upload government photo ID or passport" detail="PDF, JPG or PNG · KYC review demo" onFilesAdded={handleKycUpload} />
             </div>
 
             <div className="space-y-1.5">

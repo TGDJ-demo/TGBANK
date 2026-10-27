@@ -19,7 +19,9 @@ import {
   Eye,
   EyeOff,
   X,
+  FileText,
 } from 'lucide-react';
+import { MockDocumentUpload } from '../components/MockDocumentUpload';
 
 const CARD_OFFERS = [
   { name: 'Private Client Reserve', reward: 'Earn 120,000 welcome points', detail: 'Complimentary airport lounge access and dedicated concierge.' },
@@ -31,6 +33,7 @@ export const CardsView: React.FC = () => {
   const { creditCards, accounts, toggleFreezeCreditCard, payCreditCardBill, addToast } = useBank();
   const [showLimitModal, setShowLimitModal] = useState(false);
   const [newRequestedLimit, setNewRequestedLimit] = useState('30000');
+  const [limitEvidence, setLimitEvidence] = useState<{ name: string; size: string }[]>([]);
 
   // Credit Card Bill Payment Multi-Step Modal State
   const [showPayModal, setShowPayModal] = useState(false);
@@ -70,8 +73,13 @@ export const CardsView: React.FC = () => {
     addToast({
       type: 'success',
       title: 'Credit Limit Increase Approved',
-      message: `Your credit line has been adjusted to $${parseInt(newRequestedLimit).toLocaleString()}.00 USD.`,
+      message: `Your credit line has been adjusted to $${parseInt(newRequestedLimit).toLocaleString()}.00 USD. ${limitEvidence.length} supporting document(s) attached.`,
     });
+  };
+
+  const handleLimitEvidence = (files: File[]) => {
+    const added = files.map((file) => ({ name: file.name, size: `${Math.max(1, Math.round(file.size / 1024))} KB` }));
+    setLimitEvidence((current) => [...current, ...added]);
   };
 
   const handleStep1Proceed = (e: React.FormEvent) => {
@@ -756,6 +764,15 @@ export const CardsView: React.FC = () => {
                 className="w-full accent-[#002D72] mt-2 cursor-pointer"
               />
             </div>
+
+              <div className="space-y-2">
+                <div>
+                  <p className="text-xs font-bold text-slate-700">Supporting identity or income evidence <span className="font-normal text-slate-500">(optional)</span></p>
+                  <p className="mt-0.5 text-[10px] text-slate-500">Attach a document for this credit-limit request.</p>
+                </div>
+                <MockDocumentUpload inputId="input-card-limit-evidence" prompt="Choose supporting files" detail="PDF, JPG or PNG" onFilesAdded={handleLimitEvidence} />
+                {limitEvidence.map((document, index) => <div key={`${document.name}-${index}`} className="flex items-center gap-2 text-[10px] text-slate-600"><FileText className="h-3.5 w-3.5 text-teal-700" /><span className="truncate">{document.name}</span><span className="ml-auto shrink-0">{document.size}</span></div>)}
+              </div>
 
             <div className="flex space-x-2 pt-1">
               <button

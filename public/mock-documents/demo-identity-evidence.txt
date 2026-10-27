@@ -1,0 +1,6 @@
+TESTGRID DEMO DOCUMENT
+
+This file contains no personal data. It is provided only for testing document upload controls and mock verification workflows.
+
+Document type: Sample identity evidence
+Verification status: For demonstration only

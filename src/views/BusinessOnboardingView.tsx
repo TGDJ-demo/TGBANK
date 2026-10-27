@@ -19,10 +19,10 @@ import {
   RotateCw,
   Search,
   ShieldCheck,
-  Upload,
   X,
 } from 'lucide-react';
 import { useBank } from '../context/BankContext';
+import { MockDocumentUpload } from '../components/MockDocumentUpload';
 
 type ApplicationStatus = 'Draft' | 'Pending verification' | 'Returned' | 'Approved' | 'Rejected' | 'Account opened' | 'CBS exception';
 type CaseTab = 'Applications' | 'Reports' | 'Audit trail';
@@ -38,6 +38,9 @@ interface RelatedParty {
   name: string;
   role: PartyRole;
   ownership: string;
+  biometricStatus: 'NOT_VERIFIED' | 'VERIFIED_MOCK';
+  biometricReference?: string;
+  identityDocuments: UploadedDocument[];
 }
 
 interface OnboardingApplication {
@@ -145,7 +148,7 @@ export const BusinessOnboardingView: React.FC = () => {
   const [customerCategory, setCustomerCategory] = useState<'New to bank' | 'Existing customer'>('New to bank');
   const [product, setProduct] = useState('Business Current Account');
   const [branch, setBranch] = useState('Alibag, Mumbai');
-  const [parties, setParties] = useState<RelatedParty[]>([{ name: '', role: 'Director', ownership: '' }]);
+  const [parties, setParties] = useState<RelatedParty[]>([{ name: '', role: 'Director', ownership: '', biometricStatus: 'NOT_VERIFIED', identityDocuments: [] }]);
   const [documents, setDocuments] = useState<UploadedDocument[]>([]);
   const [consent, setConsent] = useState(false);
   const [checksRun, setChecksRun] = useState(false);
@@ -188,7 +191,7 @@ export const BusinessOnboardingView: React.FC = () => {
     setCustomerCategory('New to bank');
     setProduct('Business Current Account');
     setBranch('Alibag, Mumbai');
-    setParties([{ name: '', role: 'Director', ownership: '' }]);
+    setParties([{ name: '', role: 'Director', ownership: '', biometricStatus: 'NOT_VERIFIED', identityDocuments: [] }]);
     setDocuments([]);
     setConsent(false);
     setChecksRun(false);
@@ -212,7 +215,7 @@ export const BusinessOnboardingView: React.FC = () => {
   const runValidation = () => {
     const panValid = /^[A-Z]{5}[0-9]{4}[A-Z]$/.test(pan.trim().toUpperCase());
     const registrationDuplicate = applications.some((application) => application.reference !== editingReference && application.registrationNumber.toLowerCase() === registrationNumber.trim().toLowerCase());
-    const partiesValid = parties.some((party) => party.name.trim());
+    const partiesValid = parties.length > 0 && parties.every((party) => party.name.trim() && party.biometricStatus === 'VERIFIED_MOCK' && party.identityDocuments.length > 0);
     const pass = Boolean(legalName.trim() && registrationNumber.trim() && registeredAddress.trim() && businessActivity.trim() && panValid && !registrationDuplicate && partiesValid && documents.length > 0 && consent);
     setChecksRun(true);
     setChecksPassed(pass);
@@ -277,7 +280,7 @@ export const BusinessOnboardingView: React.FC = () => {
     setCustomerCategory((application.customerCategory as 'New to bank' | 'Existing customer') || 'New to bank');
     setProduct(application.product);
     setBranch(application.branch);
-    setParties(application.parties?.length ? application.parties : [{ name: '', role: 'Director', ownership: '' }]);
+    setParties(application.parties?.length ? application.parties : [{ name: '', role: 'Director', ownership: '', biometricStatus: 'NOT_VERIFIED', identityDocuments: [] }]);
     setDocuments(application.documents);
     setConsent(Boolean(application.consentAt));
     setStep(3);
@@ -287,15 +290,38 @@ export const BusinessOnboardingView: React.FC = () => {
     setSelectedReference(null);
   };
 
-  const handleUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const files: File[] = event.target.files ? Array.from(event.target.files) : [];
+  const handleUpload = (files: File[]) => {
     const added = files.map((file): UploadedDocument => ({
       name: file.name,
       category: file.name.toLowerCase().includes('pan') ? 'PAN' : file.name.toLowerCase().includes('address') ? 'Address proof' : 'Supporting document',
       size: file.size > 1024 * 1024 ? `${(file.size / (1024 * 1024)).toFixed(1)} MB` : `${Math.max(1, Math.round(file.size / 1024))} KB`,
     }));
     setDocuments((current) => [...current, ...added]);
-    event.target.value = '';
+  };
+
+  const handlePartyDocuments = (index: number, files: File[]) => {
+    const added = files.map((file): UploadedDocument => ({
+      name: file.name,
+      category: 'Person identity evidence',
+      size: file.size > 1024 * 1024 ? `${(file.size / (1024 * 1024)).toFixed(1)} MB` : `${Math.max(1, Math.round(file.size / 1024))} KB`,
+    }));
+    setParties((current) => current.map((party, partyIndex) => partyIndex === index
+      ? { ...party, identityDocuments: [...party.identityDocuments, ...added] }
+      : party));
+  };
+
+  const runMockBiometricCheck = (index: number) => {
+    const party = parties[index];
+    if (!party.name.trim()) {
+      addToast({ type: 'warning', title: 'Name required', message: 'Enter the person’s legal name before running mock biometric verification.' });
+      return;
+    }
+    const biometricReference = `BIO-DEMO-${String(Date.now()).slice(-6)}`;
+    setParties((current) => current.map((person, partyIndex) => partyIndex === index
+      ? { ...person, biometricStatus: 'VERIFIED_MOCK', biometricReference }
+      : person));
+    addEvent(reference, 'Mock biometric verification', `${party.name} marked as mock verified (${biometricReference}).`);
+    addToast({ type: 'success', title: 'Mock biometric check complete', message: `${party.name} is marked verified for demonstration only.` });
   };
 
   const exportReport = () => {
@@ -369,12 +395,72 @@ export const BusinessOnboardingView: React.FC = () => {
                 <Field label="Servicing branch"><select value={branch} onChange={(event) => setBranch(event.target.value)}><option>Alibag, Mumbai</option><option>Bengaluru MG Road</option><option>Viman nagar,Pune</option><option>Delhi Connaught Place</option></select></Field>
               </div>{customerCategory === 'Existing customer' && <div className="flex gap-2 border border-sky-200 bg-sky-50 px-3 py-2.5 text-xs text-sky-950"><Search className="h-4 w-4 shrink-0" />Customer search will use the registration number during validation. No CBS lookup is connected in this preview.</div>}</div>}
 
-              {step === 1 && <div className="max-w-3xl space-y-5"><div className="flex flex-wrap items-end justify-between gap-3"><div><h3 className="text-lg font-semibold text-slate-950">People and beneficial ownership</h3><p className="mt-1 text-sm text-slate-500">Record directors, partners, signatories and beneficial owners.</p></div><button onClick={() => setParties((current) => [...current, { name: '', role: 'Beneficial owner', ownership: '' }])} className="inline-flex items-center gap-1.5 border border-slate-300 px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50"><Plus className="h-3.5 w-3.5" /> Add person</button></div><div className="space-y-3">{parties.map((party, index) => <div key={index} className="related-party-row grid gap-3 border border-slate-200 p-4 sm:grid-cols-[1.3fr_1fr_0.7fr_auto] sm:items-end"><Field label="Full legal name"><input value={party.name} onChange={(event) => setParties((current) => current.map((item, i) => i === index ? { ...item, name: event.target.value } : item))} placeholder="Name as on identity document" /></Field><Field label="Relationship"><select value={party.role} onChange={(event) => setParties((current) => current.map((item, i) => i === index ? { ...item, role: event.target.value as PartyRole } : item))}><option>Director</option><option>Partner</option><option>Authorized signatory</option><option>Beneficial owner</option></select></Field><Field label="Ownership %"><input type="number" min="0" max="100" value={party.ownership} onChange={(event) => setParties((current) => current.map((item, i) => i === index ? { ...item, ownership: event.target.value } : item))} placeholder="Optional" /></Field><button disabled={parties.length === 1} aria-label={`Remove person ${index + 1}`} onClick={() => setParties((current) => current.filter((_, i) => i !== index))} className="mb-0.5 grid h-9 w-9 place-items-center text-slate-500 hover:bg-rose-50 hover:text-rose-700 disabled:opacity-30"><X className="h-4 w-4" /></button></div>)}</div><div className="flex items-start gap-2 border border-slate-200 bg-slate-50 px-3 py-3 text-xs leading-relaxed text-slate-600"><Fingerprint className="mt-0.5 h-4 w-4 shrink-0 text-teal-800" />Collect identification and verification evidence for each person according to the bank's approved KYC policy.</div></div>}
+              {step === 1 && (
+                <div className="max-w-3xl space-y-5">
+                  <div className="flex flex-wrap items-end justify-between gap-3">
+                    <div>
+                      <h3 className="text-lg font-semibold text-slate-950">People and beneficial ownership</h3>
+                      <p className="mt-1 text-sm text-slate-500">Record directors, partners, signatories and beneficial owners.</p>
+                    </div>
+                    <button onClick={() => setParties((current) => [...current, { name: '', role: 'Beneficial owner', ownership: '', biometricStatus: 'NOT_VERIFIED', identityDocuments: [] }])} className="inline-flex items-center gap-1.5 border border-slate-300 px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50">
+                      <Plus className="h-3.5 w-3.5" /> Add person
+                    </button>
+                  </div>
+                  <div className="space-y-3">
+                    {parties.map((party, index) => (
+                      <div key={index} className="border border-slate-200 p-4">
+                        <div className="related-party-row grid gap-3 sm:grid-cols-[1.3fr_1fr_0.7fr_auto] sm:items-end">
+                          <Field label="Full legal name"><input value={party.name} onChange={(event) => setParties((current) => current.map((item, i) => i === index ? { ...item, name: event.target.value } : item))} placeholder="Name as on identity document" /></Field>
+                          <Field label="Relationship"><select value={party.role} onChange={(event) => setParties((current) => current.map((item, i) => i === index ? { ...item, role: event.target.value as PartyRole } : item))}><option>Director</option><option>Partner</option><option>Authorized signatory</option><option>Beneficial owner</option></select></Field>
+                          <Field label="Ownership %"><input type="number" min="0" max="100" value={party.ownership} onChange={(event) => setParties((current) => current.map((item, i) => i === index ? { ...item, ownership: event.target.value } : item))} placeholder="Optional" /></Field>
+                          <button disabled={parties.length === 1} aria-label={`Remove person ${index + 1}`} onClick={() => setParties((current) => current.filter((_, i) => i !== index))} className="mb-0.5 grid h-9 w-9 place-items-center text-slate-500 hover:bg-rose-50 hover:text-rose-700 disabled:opacity-30"><X className="h-4 w-4" /></button>
+                        </div>
+                        <div className="mt-4 grid gap-4 border-t border-slate-100 pt-4 sm:grid-cols-2">
+                          <div className="space-y-2">
+                            <div className="flex flex-wrap items-center justify-between gap-2">
+                              <div>
+                                <p className="text-xs font-semibold text-slate-800">Biometric identity check</p>
+                                <p className="mt-0.5 text-[10px] text-slate-500">Demo only. No camera or biometric data is accessed.</p>
+                              </div>
+                              <button type="button" disabled={!party.name.trim()} onClick={() => runMockBiometricCheck(index)} className="border border-slate-300 px-2.5 py-1.5 text-[10px] font-semibold text-slate-700 hover:border-teal-700 hover:text-teal-800 disabled:cursor-not-allowed disabled:opacity-50">
+                                {party.biometricStatus === 'VERIFIED_MOCK' ? 'Run again' : 'Run mock check'}
+                              </button>
+                            </div>
+                            <div className={`flex items-center justify-between gap-2 px-3 py-2 text-[10px] ${party.biometricStatus === 'VERIFIED_MOCK' ? 'bg-emerald-50 text-emerald-800' : 'bg-slate-50 text-slate-600'}`}>
+                              <span>{party.biometricStatus === 'VERIFIED_MOCK' ? 'Mock verified' : 'Not verified'}</span>
+                              {party.biometricReference && <span className="font-mono">{party.biometricReference}</span>}
+                            </div>
+                          </div>
+                          <div>
+                            <p className="mb-2 text-xs font-semibold text-slate-800">Identity verification evidence</p>
+                            <MockDocumentUpload inputId={`business-party-${index}-identity-upload`} prompt="Choose identity files or scan" detail="PDF, JPG or PNG · multiple files accepted" onFilesAdded={(files) => handlePartyDocuments(index, files)} />
+                            {party.identityDocuments.length > 0 && <ul className="mt-2 space-y-1">{party.identityDocuments.map((document, documentIndex) => <li key={`${document.name}-${documentIndex}`} className="flex items-center gap-2 text-[10px] text-slate-600"><FileText className="h-3.5 w-3.5 shrink-0 text-teal-700" /><span className="min-w-0 truncate">{document.name}</span><span className="ml-auto shrink-0">{document.size}</span></li>)}</ul>}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="flex items-start gap-2 border border-slate-200 bg-slate-50 px-3 py-3 text-xs leading-relaxed text-slate-600"><Fingerprint className="mt-0.5 h-4 w-4 shrink-0 text-teal-800" />Complete the bank-approved identity verification steps for every related person. The biometric action here only records a mock result.</div>
+                </div>
+              )}
 
-              {step === 2 && <div className="max-w-3xl space-y-5"><div><h3 className="text-lg font-semibold text-slate-950">Documents and consent</h3><p className="mt-1 text-sm text-slate-500">Attach readable supporting records and capture the customer authorization.</p></div><label className="flex cursor-pointer flex-col items-center border border-dashed border-slate-300 bg-slate-50 px-6 py-8 text-center hover:border-teal-600 hover:bg-teal-50/40"><Upload className="h-6 w-6 text-teal-800" /><span className="mt-2 text-sm font-semibold text-slate-800">Choose files to upload or scan from device</span><span className="mt-1 text-xs text-slate-500">PDF, JPG or PNG · multiple documents accepted</span><input type="file" multiple accept=".pdf,.jpg,.jpeg,.png" capture="environment" className="sr-only" onChange={handleUpload} /></label>{documents.length > 0 ? <div className="divide-y divide-slate-200 border border-slate-200">{documents.map((document, index) => <div key={`${document.name}-${index}`} className="flex items-center gap-3 px-4 py-3"><FileText className="h-4 w-4 shrink-0 text-teal-800" /><div className="min-w-0 flex-1"><p className="truncate text-xs font-semibold text-slate-800">{document.name}</p><p className="text-[11px] text-slate-500">{document.category} · {document.size}</p></div><button aria-label={`Remove ${document.name}`} onClick={() => setDocuments((current) => current.filter((_, i) => i !== index))} className="grid h-8 w-8 place-items-center text-slate-500 hover:text-rose-700"><X className="h-4 w-4" /></button></div>)}</div> : <p className="text-xs text-slate-500">No documents attached yet.</p>}<label className="flex items-start gap-3 border border-slate-200 px-4 py-4"><input type="checkbox" checked={consent} onChange={(event) => setConsent(event.target.checked)} className="mt-0.5 h-4 w-4" /><span className="text-xs leading-relaxed text-slate-700">I confirm that the authorized signatory has reviewed the application, provided the declarations and consents required for account opening, and authorized the bank to conduct prescribed verification and screening. <strong>Consent evidence is captured for this demo at submission time.</strong></span></label></div>}
+              {step === 2 && (
+                <div className="max-w-3xl space-y-5">
+                  <div>
+                    <h3 className="text-lg font-semibold text-slate-950">Documents and consent</h3>
+                    <p className="mt-1 text-sm text-slate-500">Attach readable supporting records and capture the customer authorization.</p>
+                  </div>
+                  <MockDocumentUpload inputId="business-entity-document-upload" prompt="Choose files to upload or scan from device" detail="PDF, JPG or PNG · multiple documents accepted" onFilesAdded={handleUpload} />
+                  {documents.length > 0 ? <div className="divide-y divide-slate-200 border border-slate-200">{documents.map((document, index) => <div key={`${document.name}-${index}`} className="flex items-center gap-3 px-4 py-3"><FileText className="h-4 w-4 shrink-0 text-teal-800" /><div className="min-w-0 flex-1"><p className="truncate text-xs font-semibold text-slate-800">{document.name}</p><p className="text-[11px] text-slate-500">{document.category} · {document.size}</p></div><button aria-label={`Remove ${document.name}`} onClick={() => setDocuments((current) => current.filter((_, i) => i !== index))} className="grid h-8 w-8 place-items-center text-slate-500 hover:text-rose-700"><X className="h-4 w-4" /></button></div>)}</div> : <p className="text-xs text-slate-500">No documents attached yet.</p>}
+                  <label className="flex items-start gap-3 border border-slate-200 px-4 py-4"><input type="checkbox" checked={consent} onChange={(event) => setConsent(event.target.checked)} className="mt-0.5 h-4 w-4" /><span className="text-xs leading-relaxed text-slate-700">I confirm that the authorized signatory has reviewed the application, provided the declarations and consents required for account opening, and authorized the bank to conduct prescribed verification and screening. <strong>Consent evidence is captured for this demo at submission time.</strong></span></label>
+                </div>
+              )}
 
               {step === 3 && <div className="max-w-3xl space-y-5"><div><h3 className="text-lg font-semibold text-slate-950">Review and validation</h3><p className="mt-1 text-sm text-slate-500">Run required-field, duplicate and document checks before submitting for independent review.</p></div><div className="grid gap-3 sm:grid-cols-2"><Summary label="Entity" value={legalName || 'Not provided'} /><Summary label="Registration" value={registrationNumber || 'Not provided'} /><Summary label="PAN / incorporation" value={`${pan || 'Not provided'} · ${incorporationDate || 'Date not provided'}`} /><Summary label="Product / branch" value={`${product} · ${branch}`} /><Summary label="Registered office" value={registeredAddress || 'Not provided'} /><Summary label="Business activity" value={businessActivity || 'Not provided'} /><Summary label="People / documents" value={`${parties.filter((party) => party.name.trim()).length} person(s) · ${documents.length} document(s)`} /></div><div className="space-y-2 border border-slate-200 p-4"><div className="flex items-center justify-between gap-3"><div><h4 className="text-sm font-semibold text-slate-900">Validation checklist</h4><p className="mt-1 text-xs text-slate-500">Demo-only checks; production requires bank-approved integrations.</p></div><button onClick={runValidation} className="inline-flex items-center gap-2 border border-slate-300 px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50"><ClipboardCheck className="h-4 w-4" /> Run checks</button></div>{checksRun && <div className="mt-3 space-y-2">{[
-                ['Mandatory entity and related-party data', Boolean(legalName.trim() && registrationNumber.trim() && registeredAddress.trim() && businessActivity.trim() && parties.some((party) => party.name.trim()))],
+                ['Mandatory entity details', Boolean(legalName.trim() && registrationNumber.trim() && registeredAddress.trim() && businessActivity.trim())],
+                ['Related-party names', parties.length > 0 && parties.every((party) => party.name.trim())],
+                ['Mock biometric checks', parties.length > 0 && parties.every((party) => party.biometricStatus === 'VERIFIED_MOCK')],
+                ['Person identity evidence', parties.length > 0 && parties.every((party) => party.identityDocuments.length > 0)],
                 ['PAN format', /^[A-Z]{5}[0-9]{4}[A-Z]$/.test(pan.trim().toUpperCase())],
                 ['Duplicate customer search', !applications.some((application) => application.registrationNumber.toLowerCase() === registrationNumber.trim().toLowerCase())],
                 ['Document completeness', documents.length > 0], ['Customer consent', consent], ['KYC, AML, sanctions and PEP screening', true],
