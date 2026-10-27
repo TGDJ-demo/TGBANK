@@ -326,3 +326,98 @@ input[type="radio"] {
   background: #c9b9f1;
   color: #20213a;
 }
+
+#business-onboarding-hero {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  min-height: 10rem;
+  background:
+    radial-gradient(ellipse at 82% 7%, rgb(239 141 197 / 25%), transparent 17rem),
+    radial-gradient(ellipse at 28% 110%, rgb(67 211 205 / 19%), transparent 20rem),
+    linear-gradient(115deg, #172c5b 0%, #42377c 53%, #176c78 100%);
+  border: 1px solid rgb(209 199 255 / 38%);
+  border-radius: 1.5rem;
+  box-shadow: 0 24px 45px -26px rgb(34 38 102 / 42%);
+}
+
+#business-onboarding-hero::after {
+  position: absolute;
+  z-index: -1;
+  top: -5.5rem;
+  right: -2rem;
+  width: 19rem;
+  height: 19rem;
+  border: 1px solid rgb(220 208 255 / 20%);
+  border-radius: 50%;
+  content: "";
+  box-shadow: 0 0 0 1.8rem rgb(220 208 255 / 5%), 0 0 0 3.6rem rgb(220 208 255 / 3%);
+}
+
+.business-onboarding-theme > header h1 {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 1.8rem;
+  font-weight: 500;
+}
+
+.business-onboarding-theme [class*="border-slate-200"][class*="bg-white"] {
+  border-color: #e3e0ef !important;
+  border-radius: 1.05rem !important;
+  box-shadow: 0 8px 24px rgb(51 46 104 / 6%), 0 1px 2px rgb(51 46 104 / 3%) !important;
+}
+
+.business-onboarding-theme [class*="border-slate-200"][class*="bg-white"]:hover {
+  border-color: #c9c3e5 !important;
+}
+
+.business-onboarding-theme [aria-current="page"] {
+  color: #4b4c91;
+}
+
+.business-onboarding-theme input:not([type="checkbox"]):not([type="file"]),
+.business-onboarding-theme select {
+  min-width: 0;
+  max-width: 100%;
+  min-height: 2.5rem;
+  padding: 0.5rem 0.75rem !important;
+  line-height: 1.25rem;
+}
+
+.business-onboarding-theme label > div > input:not([type="file"]),
+.business-onboarding-theme label > div > select,
+.business-onboarding-theme label > div > textarea {
+  width: 100%;
+}
+
+@media (max-width: 640px) {
+  #header-navigation-bar #brand-title-text {
+    font-size: 0.82rem;
+    letter-spacing: 0.06em;
+  }
+
+  .business-onboarding-theme .related-party-row {
+    grid-template-columns: minmax(0, 1fr) 2.25rem;
+  }
+
+  .business-onboarding-theme .related-party-row > label:first-child,
+  .business-onboarding-theme .related-party-row > label:nth-child(2) {
+    grid-column: 1 / -1;
+  }
+
+  .business-onboarding-theme .related-party-row > label:nth-child(3) {
+    grid-column: 1;
+  }
+
+  .business-onboarding-theme .related-party-row > button {
+    grid-column: 2;
+    justify-self: end;
+  }
+
+  #business-onboarding-hero {
+    min-height: 0;
+  }
+
+  .business-onboarding-theme > header h1 {
+    font-size: 1.55rem;
+  }
+}

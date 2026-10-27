@@ -14,6 +14,7 @@ import {
   ShieldAlert,
   Code,
   LogOut,
+  BriefcaseBusiness,
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -39,6 +40,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, activeView: p
     { id: 'cards', label: 'Credit Cards', icon: CreditCard, testId: 'nav-item-cards' },
     { id: 'investments', label: 'Investments', icon: TrendingUp, testId: 'nav-item-investments' },
     { id: 'profile', label: 'Profile & KYC', icon: UserCheck, testId: 'nav-item-profile' },
+    { id: 'business-onboarding', label: 'Business Onboarding', icon: BriefcaseBusiness, testId: 'nav-item-business-onboarding' },
     { id: 'support', label: 'Support & Help', icon: HelpCircle, testId: 'nav-item-support' },
     { id: 'admin', label: 'Admin & Chaos Portal', icon: ShieldAlert, testId: 'nav-item-admin', highlight: true },
     { id: 'swagger', label: 'REST APIs / Swagger', icon: Code, testId: 'nav-item-swagger' },
