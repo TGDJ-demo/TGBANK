@@ -383,6 +383,10 @@ input[type="radio"] {
   line-height: 1.25rem;
 }
 
+.business-onboarding-theme input[aria-label="Search applications"]:not([type="checkbox"]):not([type="file"]) {
+  padding-left: 2rem !important;
+}
+
 .business-onboarding-theme label > div > input:not([type="file"]),
 .business-onboarding-theme label > div > select,
 .business-onboarding-theme label > div > textarea {
